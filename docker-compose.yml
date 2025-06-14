@@ -1,0 +1,138 @@
+version: '3.8'
+
+services:
+  # Backend API service
+  backend:
+    build: ./backend
+    container_name: ml-tracker-backend
+    restart: always
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/ml_tracker
+      - REDIS_URL=redis://redis:6379/0
+      - SECRET_KEY=${SECRET_KEY}
+      - ALGORITHM=HS256
+      - ACCESS_TOKEN_EXPIRE_MINUTES=30
+      - REFRESH_TOKEN_EXPIRE_DAYS=7
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - OPENAI_API_MODEL=${OPENAI_API_MODEL}
+      - OPENAI_API_ORGANIZATION=${OPENAI_API_ORGANIZATION}
+      - SMTP_SERVER=${SMTP_SERVER}
+      - SMTP_PORT=${SMTP_PORT}
+      - SMTP_USER=${SMTP_USER}
+      - SMTP_PASSWORD=${SMTP_PASSWORD}
+      - FRONTEND_URL=http://localhost:3000
+      - ELASTICSEARCH_URL=http://elasticsearch:9200
+      - ELASTICSEARCH_API_KEY=TGFmSlhKY0ItRGtNRXVmY1YxeDg6bThDUFBwdHlwNkgzTDk4eHJFNHBWUQ==
+      - ELASTICSEARCH_CLOUD_URL=https://cce7c968e5f94cb59b5922e251810730.us-central1.gcp.cloud.es.io:443
+    depends_on:
+      - db
+      - redis
+      - elasticsearch
+    networks:
+      - ml-tracker-network
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+  # Frontend React service
+  frontend:
+    build: ./frontend
+    container_name: ml-tracker-frontend
+    restart: always
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    environment:
+      - HOST=0.0.0.0
+    depends_on:
+      - backend
+    networks:
+      - ml-tracker-network
+
+  # PostgreSQL database
+  db:
+    image: postgres:15
+    container_name: ml-tracker-db
+    restart: always
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=ml_tracker
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - ml-tracker-network
+
+  # Redis for caching and queue
+  redis:
+    image: redis:7
+    container_name: ml-tracker-redis
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - ml-tracker-network
+
+  # Elasticsearch for search and analytics
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.3
+    container_name: ml-tracker-elasticsearch
+    restart: always
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    networks:
+      - ml-tracker-network
+
+  # Kibana para monitoramento gráfico do Elasticsearch
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.11.3
+    container_name: ml-tracker-kibana
+    restart: always
+    ports:
+      - "5601:5601"
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      - ELASTICSEARCH_URL=http://elasticsearch:9200
+    depends_on:
+      - elasticsearch
+    networks:
+      - ml-tracker-network
+
+  # Nginx for reverse proxy (optional for local development)
+  nginx:
+    image: nginx:1.25
+    container_name: ml-tracker-nginx
+    restart: always
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - backend
+      - frontend
+    networks:
+      - ml-tracker-network
+
+networks:
+  ml-tracker-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  redis_data:
+  elasticsearch_data:
