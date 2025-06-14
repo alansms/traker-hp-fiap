@@ -1,29 +1,76 @@
-# Mercado Livre Tracker
+# Trader HP FIAP
 
-Sistema de rastreamento de preços e análise de reputação de produtos no Mercado Livre, com foco em produtos específicos como cartuchos de tinta.
+<div align="center">
+  <img src="frontend/logo_hp.png" alt="Logo HP" width="200"/>
+  <br>
+  <h3>Sistema de rastreamento e análise de preços de produtos HP no Mercado Livre</h3>
+</div>
 
-## Funcionalidades Principais
+## 📋 Sumário
 
-- Rastreamento de preços com histórico e comparativo
-- Análise de vendedores (autorizado vs não autorizado)
-- Dashboard visual com filtros e alertas
-- Integração com tabela de preços de referência
-- Notificações por variação de preço
-- Assistente IA integrado com GPT-4
+- [Visão Geral](#visão-geral)
+- [Funcionalidades](#funcionalidades)
+- [Tecnologias](#tecnologias)
+- [Arquitetura](#arquitetura)
+- [Instalação](#instalação)
+- [Configuração](#configuração)
+- [Uso](#uso)
+- [API](#api)
+- [Desenvolvimento](#desenvolvimento)
+- [Solução de Problemas](#solução-de-problemas)
+- [Segurança](#segurança)
+- [Contribuição](#contribuição)
+- [Licença](#licença)
 
-## Tecnologias Utilizadas
+## 🔍 Visão Geral
 
-- **Backend**: FastAPI 0.110+, SQLAlchemy, JWT, PostgreSQL 15
-- **Frontend**: React 18+, TailwindCSS, Zustand
-- **Scraping**: Playwright
-- **Cache/Filas**: Redis
-- **IA**: OpenAI GPT-4
-- **Containerização**: Docker e Docker Compose
+O Trader HP é um sistema completo para monitoramento e análise de preços de produtos HP no Mercado Livre, com foco especial em cartuchos de tinta e outros suprimentos. O sistema permite rastrear vendedores autorizados e não autorizados, criar alertas de variação de preço e gerar relatórios detalhados.
 
-## Estrutura do Projeto
+## ✨ Funcionalidades
+
+### Principais recursos:
+
+- **Rastreamento de Preços**: Histórico e análise comparativa de preços
+- **Análise de Vendedores**: Identificação de vendedores autorizados vs não autorizados
+- **Dashboard Analítico**: Visualização de dados com filtros customizáveis
+- **Sistema de Alertas**: Notificações por email sobre variações significativas de preço
+- **Autenticação Segura**: Sistema de login com autenticação de dois fatores (2FA)
+- **Assistente IA**: Integração com GPT-4 para análises avançadas
+- **Exportação de Dados**: Relatórios em múltiplos formatos (PDF, XLSX, CSV)
+
+## 🛠️ Tecnologias
+
+### Stack principal:
+
+- **Backend**:
+  - FastAPI 0.110+
+  - SQLAlchemy 2.0+
+  - PostgreSQL 15
+  - Redis (cache e filas)
+  - JWT (autenticação)
+
+- **Frontend**:
+  - React 18+
+  - TailwindCSS
+  - Zustand (gerenciamento de estado)
+  - Chart.js (visualizações)
+
+- **Scraping**:
+  - Playwright
+
+- **Infraestrutura**:
+  - Docker e Docker Compose
+  - Nginx (proxy reverso)
+
+- **IA**:
+  - OpenAI GPT-4
+
+## 🏗️ Arquitetura
+
+### Estrutura de diretórios:
 
 ```
-mercado-livre-tracker/
+trader-hp/
 ├── backend/                  # API FastAPI
 │   ├── app/
 │   │   ├── core/             # Configurações centrais
@@ -47,12 +94,6 @@ mercado-livre-tracker/
 │   │   ├── components/       # Componentes React
 │   │   ├── hooks/            # Hooks personalizados
 │   │   ├── pages/            # Páginas da aplicação
-│   │   │   ├── Auth/         # Páginas de autenticação
-│   │   │   ├── Dashboard/    # Dashboard principal
-│   │   │   ├── Products/     # Gerenciamento de produtos
-│   │   │   ├── Sellers/      # Gerenciamento de vendedores
-│   │   │   ├── Alerts/       # Visualização de alertas
-│   │   │   └── Settings/     # Configurações do sistema
 │   │   ├── services/         # Serviços para API
 │   │   ├── store/            # Gerenciamento de estado (Zustand)
 │   │   ├── styles/           # Estilos globais
@@ -63,33 +104,27 @@ mercado-livre-tracker/
 └── docker-compose.yml        # Orquestração de serviços
 ```
 
-## Requisitos de Sistema
+## 📦 Instalação
+
+### Pré-requisitos:
 
 - Docker e Docker Compose
 - Git
 - Chave de API da OpenAI (para o assistente IA)
 - Servidor SMTP para envio de emails (opcional)
 
-## Guia de Instalação
+### Passos para instalação:
 
-### 1. Clonar o Repositório
-
-```bash
-# Execute no terminal
-git clone https://github.com/seu-usuario/mercado-livre-tracker.git
-cd mercado-livre-tracker
-```
-
-### 2. Configurar Variáveis de Ambiente
-
-Crie um arquivo `.env` na raiz do projeto:
+1. **Clone o repositório:**
 
 ```bash
-# Execute no terminal
-touch .env
+git clone https://github.com/alansms/trader-hp-fiap.git
+cd trader-hp-fiap
 ```
 
-Edite o arquivo `.env` com as seguintes variáveis:
+2. **Configure as variáveis de ambiente:**
+
+Crie um arquivo `.env` na raiz do projeto com as seguintes configurações:
 
 ```
 # Segurança
@@ -120,45 +155,94 @@ SMTP_PASSWORD=sua_senha_smtp
 FRONTEND_URL=http://localhost:3000
 ```
 
-### 3. Construir e Iniciar os Contêineres
+3. **Inicie os contêineres:**
 
 ```bash
-# Execute no terminal
 docker-compose build
 docker-compose up -d
 ```
 
-Este comando irá:
-1. Construir as imagens Docker para backend e frontend
-2. Iniciar os serviços PostgreSQL, Redis, backend, frontend e Nginx
-3. Configurar a rede entre os contêineres
-
-### 4. Verificar os Serviços em Execução
+4. **Verifique a instalação:**
 
 ```bash
-# Execute no terminal
 docker-compose ps
 ```
 
-Você deverá ver todos os serviços no estado "Up":
-- ml-tracker-backend
-- ml-tracker-frontend
-- ml-tracker-db
-- ml-tracker-redis
-- ml-tracker-nginx
+## ⚙️ Configuração
 
-### 5. Acessar a Aplicação
+### Níveis de permissão:
 
-- **Frontend**: http://localhost:3000
-- **API Backend**: http://localhost:8000
-- **Documentação da API**: http://localhost:8000/docs
+O sistema possui três níveis de acesso:
 
-## Executando Serviços Individualmente
+1. **Admin**
+   - Acesso total ao sistema
+   - Gerenciamento de usuários
+   - Configuração de parâmetros globais
 
-### Backend (FastAPI)
+2. **Analista**
+   - Monitoramento e análise de produtos
+   - Criação de relatórios
+   - Configuração de alertas
+
+3. **Visitante**
+   - Visualização de dados existentes
+   - Acesso limitado ao dashboard
+
+### Usuário padrão:
+
+Após a instalação, você pode acessar o sistema com as seguintes credenciais:
+
+- **Email:** admin@example.com
+- **Senha:** admin123
+
+> **Importante**: Altere estas credenciais imediatamente após o primeiro login!
+
+## 🚀 Uso
+
+### Acessando a aplicação:
+
+- **Frontend:** http://localhost:3000
+- **API Backend:** http://localhost:8000
+- **Documentação da API:** http://localhost:8000/docs
+
+### Operações básicas:
+
+1. **Autenticação:**
+   - Faça login usando suas credenciais
+   - Configure o autenticador 2FA (recomendado)
+
+2. **Monitoramento de produtos:**
+   - Adicione produtos para rastrear via URL ou código
+   - Configure intervalos de atualização de preços
+
+3. **Configuração de alertas:**
+   - Defina limites de preço para receber notificações
+   - Configure canais de notificação (email, sistema)
+
+4. **Geração de relatórios:**
+   - Crie relatórios periódicos ou sob demanda
+   - Exporte dados em diversos formatos
+
+## 🔌 API
+
+A API REST do sistema está disponível em `http://localhost:8000` com documentação completa via Swagger UI em `http://localhost:8000/docs`.
+
+### Endpoints principais:
+
+- `/api/auth`: Autenticação e gerenciamento de tokens
+- `/api/products`: Gerenciamento de produtos monitorados
+- `/api/sellers`: Informações sobre vendedores
+- `/api/prices`: Histórico e análise de preços
+- `/api/alerts`: Configuração e histórico de alertas
+- `/api/reports`: Geração de relatórios personalizados
+
+## 💻 Desenvolvimento
+
+### Executando serviços individualmente:
+
+#### Backend:
 
 ```bash
-# Execute no terminal
 cd backend
 python -m venv venv
 source venv/bin/activate  # No Windows: venv\Scripts\activate
@@ -166,216 +250,144 @@ pip install -r requirements.txt
 uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
-### Frontend (React)
+#### Frontend:
 
 ```bash
-# Execute no terminal
 cd frontend
 npm install
 npm start
 ```
 
-## Solução de Problemas Comuns
-
-### Problema: Contêineres não iniciam corretamente
-
-Verifique os logs para identificar o problema:
+### Importação de dados:
 
 ```bash
-# Execute no terminal
-docker-compose logs -f
-```
-
-Para ver logs de um serviço específico:
-
-```bash
-docker-compose logs -f backend
-docker-compose logs -f frontend
-```
-
-### Problema: Erro de conexão com o banco de dados
-
-Verifique se o serviço do PostgreSQL está em execução:
-
-```bash
-# Execute no terminal
-docker-compose ps db
-```
-
-Se necessário, reinicie o serviço:
-
-```bash
-# Execute no terminal
-docker-compose restart db
-```
-
-### Problema: Erro ao conectar com Redis
-
-Verifique se o serviço Redis está em execução:
-
-```bash
-# Execute no terminal
-docker-compose ps redis
-```
-
-Se necessário, reinicie o serviço:
-
-```bash
-# Execute no terminal
-docker-compose restart redis
-```
-
-### Problema: Erro na API do OpenAI
-
-Verifique se a chave da API está configurada corretamente no arquivo `.env`.
-
-## Comandos Docker Úteis
-
-### Iniciar todos os serviços
-
-```bash
-# Execute no terminal
-docker-compose up -d
-```
-
-### Parar todos os serviços
-
-```bash
-# Execute no terminal
-docker-compose down
-```
-
-### Reiniciar um serviço específico
-
-```bash
-# Execute no terminal
-docker-compose restart [serviço]  # Ex: docker-compose restart backend
-```
-
-### Ver logs de todos os serviços
-
-```bash
-# Execute no terminal
-docker-compose logs -f
-
-# Ou para um serviço específico
-docker-compose logs -f backend  # Para logs do backend
-docker-compose logs -f frontend  # Para logs do frontend
-```
-
-### Reconstruir serviços após alterações
-
-```bash
-# Execute no terminal
-docker-compose build [serviço]  # Ex: docker-compose build backend
-docker-compose up -d
-```
-
-## Níveis de Permissão
-
-O sistema possui três níveis de permissão:
-
-1. **Admin**:
-   - Acesso total ao sistema
-   - Gerenciamento de usuários
-   - Importação de listas de preços e vendedores
-   - Configurações do sistema
-
-2. **Analista**:
-   - Cadastro e monitoramento de produtos
-   - Visualização de dados e gráficos
-   - Geração de relatórios
-   - Uso do assistente IA
-
-3. **Visitante**:
-   - Visualização de dados existentes
-   - Sem permissão para cadastrar ou modificar
-
-## Importação de Dados
-
-### Importar Lista de Preços de Referência
-
-```bash
-# Execute no terminal
+# Importar lista de preços de referência
 docker-compose exec backend python -m scripts.import_prices /caminho/para/lista_precos.xlsx
-```
 
-### Importar Lista de Vendedores Autorizados
-
-```bash
-# Execute no terminal
+# Importar lista de vendedores autorizados
 docker-compose exec backend python -m scripts.import_sellers /caminho/para/lista_vendedores.xlsx
 ```
 
-## Verificação Pós-Instalação
+## 🔧 Solução de Problemas
 
-Após a instalação, verifique se:
+### Problemas comuns e soluções:
 
-1. Todos os serviços estão em execução (`docker-compose ps`)
-2. O frontend está acessível em http://localhost:3000
-3. A API está acessível em http://localhost:8000
-4. A documentação da API está acessível em http://localhost:8000/docs
-5. É possível fazer login com as credenciais padrão:
-   - Email: admin@example.com
-   - Senha: admin123
+#### Contêineres não iniciam:
 
-## Desenvolvimento
+```bash
+# Verificar logs
+docker-compose logs -f
 
-### Estrutura de Arquivos Frontend
-
-```
-frontend/src/
-├── assets/           # Recursos estáticos
-├── components/       # Componentes reutilizáveis
-│   ├── Layout/       # Componentes de layout (Sidebar, Topbar)
-│   ├── Dashboard/    # Componentes do dashboard
-│   ├── Products/     # Componentes de produtos
-│   ├── Alerts/       # Componentes de alertas
-│   └── ...
-├── hooks/            # Hooks personalizados
-├── pages/            # Páginas da aplicação
-│   ├── Auth/         # Login, Registro, Recuperação de senha
-│   ├── Dashboard/    # Dashboard principal
-│   ├── Products/     # Listagem e detalhes de produtos
-│   ├── Sellers/      # Listagem e detalhes de vendedores
-│   ├── Alerts/       # Listagem de alertas
-│   └── Settings/     # Configurações do sistema
-├── services/         # Serviços para comunicação com API
-├── store/            # Gerenciamento de estado (Zustand)
-├── styles/           # Estilos globais
-└── utils/            # Funções utilitárias
+# Reiniciar serviços
+docker-compose restart
 ```
 
-### Estrutura de Arquivos Backend
+#### Erro de conexão com banco de dados:
 
-```
-backend/app/
-├── core/             # Configurações centrais
-│   ├── config.py     # Configurações da aplicação
-│   └── security.py   # Funções de segurança
-├── db/               # Configurações de banco de dados
-│   └── session.py    # Configuração da sessão
-├── middlewares/      # Middlewares da aplicação
-├── models/           # Modelos SQLAlchemy
-│   ├── user.py       # Modelo de usuário
-│   ├── product.py    # Modelo de produto
-│   ├── price.py      # Modelo de preço
-│   └── ...
-├── routers/          # Rotas da API
-│   ├── auth.py       # Rotas de autenticação
-│   ├── users.py      # Rotas de usuários
-│   ├── products.py   # Rotas de produtos
-│   └── ...
-├── schemas/          # Schemas Pydantic
-├── services/         # Lógica de negócios
-│   ├── auth.py       # Serviço de autenticação
-│   ├── scraper.py    # Serviço de scraping
-│   └── ...
-├── tasks/            # Tarefas assíncronas
-└── utils/            # Funções utilitárias
+```bash
+# Verificar status do PostgreSQL
+docker-compose ps db
+
+# Reiniciar o serviço
+docker-compose restart db
 ```
 
-## Contribuição
+#### Erro na API do OpenAI:
+
+Verifique se a chave da API está configurada corretamente no arquivo `.env`.
+
+## 🔒 Segurança
+
+### Autenticação de dois fatores:
+
+O sistema utiliza autenticação de dois fatores (2FA) para maior segurança:
+
+```python
+# Modelo de usuário com suporte a 2FA
+class User(Base):
+    __tablename__ = 'users'
+
+    id = Column(Integer, primary_key=True)
+    username = Column(String(50), nullable=False)
+    password = Column(String(255), nullable=False)
+    twofa_secret = Column(String(255), nullable=False)
+```
+
+Para configurar o 2FA:
+1. Acesse as configurações da sua conta
+2. Escaneie o código QR com um aplicativo autenticador
+3. Insira o código gerado para validar
+
+### Comandos Docker úteis:
+
+```bash
+# Iniciar todos os serviços
+docker-compose up -d
+
+# Parar todos os serviços
+docker-compose down
+
+# Reiniciar um serviço específico
+docker-compose restart [serviço]
+
+# Ver logs
+docker-compose logs -f [serviço]
+
+# Reconstruir após alterações
+docker-compose build [serviço]
+docker-compose up -d
+```
+
+## 🔄 Controle de Versão (Git)
+
+### Fluxo de trabalho com Git
+
+Para contribuir com o projeto e garantir que suas alterações sejam devidamente salvas no repositório:
+
+1. **Clone o repositório**:
+   ```bash
+   git clone https://github.com/seu-usuario/trader-hp-fiap.git
+   cd trader-hp-fiap
+   ```
+
+2. **Crie uma branch para suas alterações**:
+   ```bash
+   git checkout -b feature/nome-da-sua-feature
+   ```
+
+3. **Faça suas alterações e commits**:
+   ```bash
+   git add .
+   git commit -m "Descrição clara das alterações realizadas"
+   ```
+
+4. **Envie suas alterações para o repositório remoto**:
+   ```bash
+   git push origin feature/nome-da-sua-feature
+   ```
+
+5. **Crie um Pull Request** para que suas alterações sejam revisadas e incorporadas à branch principal.
+
+### Boas práticas para commits
+
+- Faça commits pequenos e focados em uma única alteração
+- Use mensagens de commit claras e descritivas
+- Sempre teste suas alterações antes de fazer commit
+- Mantenha seu repositório local atualizado:
+  ```bash
+  git pull origin main
+  ```
+
+### Resolução de conflitos
+
+Se ocorrerem conflitos durante o merge:
+
+1. Resolva os conflitos localmente
+2. Teste a aplicação após a resolução
+3. Faça commit das alterações resolvidas
+4. Continue com o push ou merge
+
+## 👥 Contribuição
 
 Para contribuir com o projeto:
 
@@ -385,96 +397,12 @@ Para contribuir com o projeto:
 4. Faça push para a branch (`git push origin feature/nova-funcionalidade`)
 5. Abra um Pull Request
 
-## Licença
+## 📄 Licença
 
 Este projeto está licenciado sob a licença MIT - veja o arquivo LICENSE para detalhes.
 
-## Importante
+---
 
-O sistema de autenticação foi modificado para utilizar 2FA (Duas Fases) em vez do modelo antigo de autenticação simples. Agora, além da senha, é necessário inserir um código de verificação gerado pelo aplicativo Authenticator. Isso adiciona mais segurança ao sistema.
-
-```python
-# No arquivo models.py
-
-from sqlalchemy import Column, Integer, String
-
-class User(Base):
-    __tablename__ = 'users'
-
-    id = Column(Integer, primary_key=True)
-    username = Column(String(50), nullable=False)
-    password = Column(String(255), nullable=False)
-    # Novo campo adicionado
-    twofa_secret = Column(String(255), nullable=False)
-
-# No arquivo schemas.py
-
-from pydantic import BaseModel
-from typing import Optional
-
-class UserSchema(BaseModel):
-    username: str
-    password: str
-    # Novo campo adicionado
-    twofa_code: Optional[str]
-```
-
-```python
-# No arquivo auth.py (services/auth.py)
-
-from fastapi import HTTPException, status
-from sqlalchemy.exc import IntegrityError, DataError
-
-from ..models import User
-from ..schemas import UserSchema
-
-def verify_user_credentials(username: str, password: str, twofa_code: Optional[str] = None) -> User:
-    user = get_user_by_username(username)
-
-    if not user or not check_password(password, user.password):
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
-                             detail='Invalid username and/or password')
-
-    # Verificar se o código de verificação 2FA está correto
-    if twofa_code and twofa_code != get_twofa_code(user.twofa_secret):
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
-                             detail='Invalid 2FA code')
-
-    return user
-
-def get_user_by_username(username: str) -> User:
-    # Implementar lógica de busca do usuário
-    pass
-
-def check_password(password: str, hashed_password: str) -> bool:
-    # Implementar função para verificar a senha
-    pass
-
-def get_twofa_code(secret_key: str) -> str:
-    # Implementar função para gerar o código de verificação 2FA
-    pass
-```
-
-```python
-# No arquivo routes/a
-# 
-# uth.py
-
-from fastapi import APIRouter, Depends, HTTPException
-from fastapi.security import OAuth2PasswordBearer
-
-from ..services.auth import verify_user_credentials
-
-router = APIRouter()
-
-oauth2_scheme = OAuth2PasswordBearer(
-    tokenUrl="/auth/token",
-    schemeName="bearer",
-)
-
-@router.post("/token")
-async def get_token(username: str, password: str, twofa_code: Optional[str] = None):
-    user = verify_user_credentials(username, password, twofa_code=twofa_code)
-    # Gerar o token de autenticação
-    return {"access_token": "token_value", "token_type": "bearer"}
-```
+<div align="center">
+  <p>Desenvolvido para FIAP - MBA em Engenharia de Software © 2025</p>
+</div>
