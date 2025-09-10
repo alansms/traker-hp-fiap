@@ -1,4 +1,3 @@
-/* global process */  // Adiciona a definição global do process para o ESLint
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import * as authService from '../services/auth';
 
