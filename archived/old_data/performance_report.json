@@ -1,0 +1,60 @@
+{
+  "timestamp": "2025-06-30T20:53:06.135300",
+  "tests": [
+    {
+      "name": "Top Products",
+      "service": "ClickHouse",
+      "avg_time_ms": 24.6,
+      "url": "http://localhost:8000/api/dashboard/top-products"
+    },
+    {
+      "name": "Search Trends",
+      "service": "ClickHouse",
+      "avg_time_ms": 8.4,
+      "url": "http://localhost:8000/api/dashboard/search-trends"
+    },
+    {
+      "name": "Daily Searches",
+      "service": "ClickHouse",
+      "avg_time_ms": 6.3,
+      "url": "http://localhost:8000/api/dashboard/daily-searches"
+    },
+    {
+      "name": "Price Distribution",
+      "service": "ClickHouse",
+      "avg_time_ms": 4.1,
+      "url": "http://localhost:8000/api/dashboard/price-distribution"
+    },
+    {
+      "name": "Search 'cartucho hp'",
+      "service": "Meilisearch",
+      "avg_time_ms": 4.2,
+      "query": "cartucho hp"
+    },
+    {
+      "name": "Search 'impressora'",
+      "service": "Meilisearch",
+      "avg_time_ms": 2.4,
+      "query": "impressora"
+    },
+    {
+      "name": "Search 'papel fotografico'",
+      "service": "Meilisearch",
+      "avg_time_ms": 2.2,
+      "query": "papel fotografico"
+    },
+    {
+      "name": "Search 'cartucho 712'",
+      "service": "Meilisearch",
+      "avg_time_ms": 1.9,
+      "query": "cartucho 712"
+    },
+    {
+      "name": "Search 'hp original'",
+      "service": "Meilisearch",
+      "avg_time_ms": 1.9,
+      "query": "hp original"
+    }
+  ],
+  "summary": {}
+}
