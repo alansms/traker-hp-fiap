@@ -1,4 +1,4 @@
-FROM node:18-alpine
+FROM node:14-alpine
 
 WORKDIR /app
 
@@ -8,6 +8,9 @@ RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 # Copiar arquivos de configuração
 COPY package*.json ./
 
+# Instalar serve globalmente como root
+RUN npm install -g serve
+
 # Configurar permissões
 RUN chown -R appuser:appgroup /app
 
@@ -16,13 +19,19 @@ USER appuser
 
 # Limpar cache e instalar dependências
 RUN npm cache clean --force && \
-    npm install
+    npm install --legacy-peer-deps
 
 # Copiar código fonte
 COPY --chown=appuser:appgroup . .
 
-# Expor a porta que o React usará
+# Build de produção
+ENV DISABLE_ESLINT_PLUGIN=true
+ENV GENERATE_SOURCEMAP=false
+ENV CI=false
+RUN npm run build
+
+# Expor a porta que o servidor estático usará
 EXPOSE 3000
 
-# Comando para iniciar a aplicação em modo de desenvolvimento
-CMD ["npm", "start"]
+# Servir a build de produção
+CMD ["serve", "-s", "build", "-l", "3000"]

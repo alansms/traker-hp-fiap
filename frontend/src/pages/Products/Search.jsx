@@ -1,5 +1,5 @@
 // Movido de /pages/Search/index.jsx
-import { useState } from 'react';
+import React, { useState } from 'react';
 import {
   Box,
   Typography,

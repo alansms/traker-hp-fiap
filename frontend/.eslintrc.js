@@ -1,30 +1,19 @@
 module.exports = {
-  env: {
-    browser: true,
-    es2021: true,
-  },
   extends: [
-    'eslint:recommended',
-    'plugin:react/recommended',
-    'plugin:react-hooks/recommended',
+    'react-app',
+    'react-app/jest'
   ],
+  rules: {
+    'react/react-in-jsx-scope': 'off',
+    'react/jsx-uses-react': 'off',
+    'no-unused-vars': 'off',
+    'no-undef': 'off'
+  },
   parserOptions: {
-    ecmaVersion: 12,
+    ecmaVersion: 2020,
     sourceType: 'module',
     ecmaFeatures: {
-      jsx: true,
-    },
-  },
-  plugins: ['react'],
-  rules: {
-    'no-unused-vars': 'warn',
-    'react/prop-types': 'off',
-    'react/react-in-jsx-scope': 'off',  // Desativa a necessidade de importar React explicitamente
-    'react/jsx-uses-react': 'off'       // Complemento para a regra anterior
-  },
-  settings: {
-    react: {
-      version: 'detect'  // Detecta automaticamente a versão do React
+      jsx: true
     }
   }
-}
+};
