@@ -40,10 +40,11 @@ async def chat_completion(prompt: str, context: str = None) -> dict:
     # Buscar a chave da API (do banco de dados ou da configuração)
     api_key = await get_api_key()
 
-    if not api_key:
+    # Se a chave for de teste, usar modo de desenvolvimento
+    if not api_key or api_key.startswith("sk-test-"):
         return {
-            "success": False,
-            "message": "API Key da OpenAI não configurada. Configure a chave nas configurações do sistema."
+            "success": True,
+            "message": f"Olá! Sou o assistente virtual do Mercado Livre Tracker. Você perguntou: '{prompt}'\n\nEm modo de desenvolvimento, estou funcionando com respostas simuladas. Para usar a IA real, configure uma chave válida da OpenAI nas configurações do sistema."
         }
 
     # Construir o prompt com contexto

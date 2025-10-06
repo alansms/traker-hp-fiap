@@ -3,22 +3,63 @@ from jose import jwt, JWTError
 from datetime import datetime, timedelta
 from typing import Optional, Dict, Any
 import pyotp
+import hashlib
+import base64
+import bcrypt  # Importando bcrypt nativo
 
 from app.core.config import settings
 
 # Algoritmo usado para JWT
 ALGORITHM = "HS256"
 
-# Configuração do contexto de criptografia para senhas
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+# Função para gerar hash de senha
+def get_password_hash(password: str) -> str:
+    """
+    Gera um hash seguro para a senha usando bcrypt nativo do Python.
+    Para evitar o erro de limite de 72 bytes, primeiro fazemos um hash SHA-256 da senha,
+    que sempre produz uma saída de 32 bytes (64 caracteres hexadecimais),
+    e então aplicamos o bcrypt a esse hash.
+    """
+    try:
+        # Primeiro, hash a senha com SHA-256 para garantir um tamanho fixo (evita o erro de 72 bytes)
+        password_hash = hashlib.sha256(password.encode('utf-8')).hexdigest().encode('utf-8')
+
+        # Usar bcrypt nativo do Python em vez de passlib
+        salt = bcrypt.gensalt(rounds=12)
+        hashed = bcrypt.hashpw(password_hash, salt)
+
+        # Converter bytes para string
+        return hashed.decode('utf-8')
+    except Exception as e:
+        import logging
+        logging.error(f"Erro ao gerar hash de senha: {str(e)}")
+        # Abordagem de fallback com SHA-256 simples em caso de erro
+        fallback_hash = hashlib.sha256(password.encode('utf-8')).hexdigest()
+        return f"$sha256${fallback_hash}"  # Formato personalizado para identificar hashes SHA-256
 
 # Função para verificar senha
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    return pwd_context.verify(plain_password, hashed_password)
+    """
+    Verifica se a senha fornecida corresponde ao hash armazenado.
+    Aplica o mesmo processo de hash SHA-256 antes de verificar.
+    """
+    try:
+        # Se estiver usando o fallback SHA-256
+        if hashed_password.startswith('$sha256$'):
+            hash_value = hashed_password.split('$', 2)[2]
+            password_hash = hashlib.sha256(plain_password.encode('utf-8')).hexdigest()
+            return password_hash == hash_value
 
-# Função para gerar hash de senha
-def get_password_hash(password: str) -> str:
-    return pwd_context.hash(password)
+        # Senão, usar o método normal do bcrypt
+        # Primeiro aplica SHA-256 à senha
+        password_hash = hashlib.sha256(plain_password.encode('utf-8')).hexdigest().encode('utf-8')
+
+        # Verifica usando bcrypt nativo
+        return bcrypt.checkpw(password_hash, hashed_password.encode('utf-8'))
+    except Exception as e:
+        import logging
+        logging.error(f"Erro ao verificar senha: {str(e)}")
+        return False
 
 # Função para criar token de acesso
 def create_access_token(data: Dict[str, Any], expires_delta: Optional[timedelta] = None) -> str:

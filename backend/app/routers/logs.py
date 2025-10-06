@@ -28,13 +28,16 @@ async def get_logs(
     search_term: Optional[str] = Query(None),
     export: Optional[str] = Query(None, description="Formato de exportação (csv)"),
     current_user: User = Depends(get_current_active_user),
-    log_service: LogService = Depends()
+    db: Session = Depends(get_db)
 ):
     """
     Obter logs do sistema com filtros e paginação.
     Apenas administradores ou usuários com permissão podem acessar.
     Opcionalmente exporta os dados em formato CSV.
     """
+    # Criar instância do LogService
+    log_service = LogService(db)
+    
     # Converter strings de data para objetos datetime
     start_datetime = None
     if start_date:
@@ -109,12 +112,15 @@ async def get_my_logs(
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=100),
     current_user: User = Depends(get_current_active_user),
-    log_service: LogService = Depends()
+    db: Session = Depends(get_db)
 ):
     """
     Obter logs do usuário atual.
     Qualquer usuário autenticado pode acessar seus próprios logs.
     """
+    # Criar instância do LogService
+    log_service = LogService(db)
+    
     # Registrar esta consulta nos logs
     await log_service.create_log(
         level=LogLevel.LOW,
@@ -133,12 +139,15 @@ async def get_my_logs(
 async def get_log_by_id(
     log_id: int,
     current_user: User = Depends(get_current_active_superuser),
-    log_service: LogService = Depends()
+    db: Session = Depends(get_db)
 ):
     """
     Obter um log específico pelo ID.
     Apenas administradores podem acessar.
     """
+    # Criar instância do LogService
+    log_service = LogService(db)
+    
     log = await log_service.get_log_by_id(log_id)
     if not log:
         raise HTTPException(status_code=404, detail="Log não encontrado")

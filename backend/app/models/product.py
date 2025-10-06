@@ -13,9 +13,10 @@ class Product(Base):
     pn = Column(String, index=True)  # Part Number
     search_terms = Column(String, nullable=False)  # Termos de busca para ML
     url = Column(String)
-    family = Column(String)
+    family = Column(String)  # Família do produto (ex: HP 667, HP 664)
     printer_models = Column(JSON)  # Lista de modelos de impressora compatíveis
-    reference_price = Column(Float, default=0.0)
+    reference_price = Column(Float, default=0.0)  # Preço sugerido/referência
+    average_pages = Column(Integer, default=0)  # Média de páginas impressas
     check_interval = Column(Integer, default=6)  # Em horas
     is_active = Column(Boolean, default=True)
 
@@ -24,4 +25,5 @@ class Product(Base):
     updated_at = Column(DateTime, default=func.now(), onupdate=func.now(), nullable=True)
     last_search = Column(DateTime, nullable=True)
 
-    # Relacionamentos podem ser adicionados aqui para histórico de preços, etc.
+    # Relacionamentos
+    # suspicious_products = relationship("SuspiciousProduct", back_populates="product")

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Typography,
@@ -141,14 +141,49 @@ const NotificationSettings = () => {
   const handleTestNotification = async (type) => {
     setLoading(true);
     try {
-      // Simulação de teste de notificação
-      setTimeout(() => {
+      const token = localStorage.getItem('token') || authToken;
+      if (!token) {
+        setError('Sessão expirada. Por favor, faça login novamente.');
         setLoading(false);
-        setSaveSuccess(true);
-        setTimeout(() => setSaveSuccess(false), 3000);
-      }, 1000);
+        return;
+      }
+
+      if (type === 'email') {
+        // Usar endpoint de teste de email
+        const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:8000'}/api/email/test-email`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            email: settings.notificationEmail || user?.email,
+            subject: 'Teste de Email - Mercado Livre Tracker',
+            message: 'Este é um email de teste para verificar se o sistema de notificações está funcionando corretamente.'
+          })
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          console.log('✅ Email de teste enviado:', result);
+          setSaveSuccess(true);
+          setTimeout(() => setSaveSuccess(false), 3000);
+        } else {
+          const error = await response.json();
+          console.error('❌ Erro ao enviar email:', error);
+          setError(`Erro ao enviar email de teste: ${error.detail || 'Erro desconhecido'}`);
+        }
+      } else {
+        // Simulação para outros tipos de notificação
+        setTimeout(() => {
+          setSaveSuccess(true);
+          setTimeout(() => setSaveSuccess(false), 3000);
+        }, 1000);
+      }
     } catch (err) {
-      setError(`Erro ao enviar notificação de teste para ${type}`);
+      console.error('Erro ao testar notificação:', err);
+      setError(`Erro ao enviar notificação de teste para ${type}: ${err.message}`);
+    } finally {
       setLoading(false);
     }
   };

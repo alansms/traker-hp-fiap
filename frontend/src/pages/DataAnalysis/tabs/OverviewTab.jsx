@@ -41,7 +41,7 @@ const OverviewTab = ({ analysisData }) => {
             <Grid item xs={12} sm={3}>
               <Box sx={{ textAlign: 'center', p: 2 }}>
                 <Typography variant="h3" color="secondary">
-                  {analysisData.priceStats?.avgPrice ?
+                  {analysisData.priceStats?.avgPrice && analysisData.priceStats.avgPrice > 0 ?
                     `R$ ${analysisData.priceStats.avgPrice.toFixed(2)}` : 'N/A'}
                 </Typography>
                 <Typography variant="body1">Preço Médio</Typography>
@@ -58,8 +58,8 @@ const OverviewTab = ({ analysisData }) => {
             <Grid item xs={12} sm={3}>
               <Box sx={{ textAlign: 'center', p: 2 }}>
                 <Typography variant="h3" sx={{ color: '#FF8042' }}>
-                  {analysisData.discountStats?.avgDiscount ?
-                    `${analysisData.discountStats.avgDiscount.toFixed(0)}%` : '0%'}
+                  {analysisData.avgDiscount ?
+                    `${analysisData.avgDiscount.toFixed(0)}%` : '0%'}
                 </Typography>
                 <Typography variant="body1">Desconto Médio</Typography>
               </Box>

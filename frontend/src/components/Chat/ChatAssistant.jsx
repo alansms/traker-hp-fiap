@@ -70,7 +70,9 @@ const ChatAssistant = () => {
 
   // Função para rolar automaticamente para a mensagem mais recente
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
   };
 
   useEffect(() => {
@@ -99,14 +101,14 @@ const ChatAssistant = () => {
         // Adicionar mensagem de erro
         setMessages(prev => [...prev, {
           type: 'error',
-          content: 'Desculpe, tive um problema ao processar sua pergunta. Por favor, tente novamente.'
+          content: response.message || 'Ocorreu um erro ao processar sua solicitação.'
         }]);
       }
     } catch (error) {
-      console.error('Erro ao enviar mensagem:', error);
+      // Adicionar mensagem de erro em caso de falha na requisição
       setMessages(prev => [...prev, {
         type: 'error',
-        content: `Erro: ${error.message || 'Não foi possível conectar ao assistente virtual.'}`
+        content: 'Não foi possível conectar ao servidor. Tente novamente mais tarde.'
       }]);
     } finally {
       setSendingMessage(false);

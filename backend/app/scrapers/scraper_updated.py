@@ -116,6 +116,28 @@ class MercadoLivreScraper:
                         continue
 
                     link = link_elem['href']
+                    
+                    # Extrair ml_item_id da URL para obter o permalink direto
+                    ml_item_id = None
+                    import re
+                    # Procura por MLB seguido de números na URL
+                    mlb_match = re.search(r'MLB(\d+)', link)
+                    if mlb_match:
+                        ml_item_id = f"MLB{mlb_match.group(1)}"
+                        
+                        # Tentar obter o permalink direto via API do Mercado Livre
+                        try:
+                            api_url = f"https://api.mercadolibre.com/items/{ml_item_id}"
+                            api_response = requests.get(api_url, timeout=5)
+                            if api_response.status_code == 200:
+                                item_data = api_response.json()
+                                permalink = item_data.get('permalink')
+                                if permalink:
+                                    link = permalink  # Usar o permalink direto
+                                    print(f"Permalink encontrado: {permalink}")
+                        except Exception as e:
+                            print(f"Erro ao obter permalink para {ml_item_id}: {e}")
+                            # Continua com o link original se falhar
 
                     # Busca o preço com seletores mais específicos
                     preco_selectors = [
@@ -212,10 +234,20 @@ class MercadoLivreScraper:
                             'id': produto_id,
                             'titulo': titulo,
                             'link': link,
+                            'url': link,  # Para compatibilidade
+                            'ml_item_id': ml_item_id,  # ID do Mercado Livre
                             'preco': preco,
+                            'price': preco,  # Para compatibilidade
                             'avaliacao': avaliacao,
+                            'rating': avaliacao,  # Para compatibilidade
                             'num_avaliacoes': num_avaliacoes,
-                            'comentarios': comentarios
+                            'review_count': num_avaliacoes,  # Para compatibilidade
+                            'comentarios': comentarios,
+                            'seller_name': 'Vendedor não identificado',  # Placeholder
+                            'seller_id': '',  # Placeholder
+                            'seller_rating': 0,  # Placeholder
+                            'image_url': '',  # Placeholder
+                            'title': titulo  # Para compatibilidade
                         }
 
                         produtos.append(produto)

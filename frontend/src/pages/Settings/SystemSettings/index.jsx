@@ -25,9 +25,11 @@ import SettingsIcon from '@mui/icons-material/Settings';
 import BackupIcon from '@mui/icons-material/Backup';
 import RestoreIcon from '@mui/icons-material/Restore';
 import { useAuth } from '../../../hooks/useAuth';
+import { useTheme } from '../../../contexts/ThemeContext';
 
 const SystemSettings = () => {
   const { token: authToken, user } = useAuth();
+  const { themeMode, changeTheme } = useTheme();
   const [loading, setLoading] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [error, setError] = useState(null);
@@ -42,7 +44,7 @@ const SystemSettings = () => {
     emailNotifications: true,
     autoBackupEnabled: true,
     autoBackupInterval: 'daily',
-    theme: 'light'
+    theme: themeMode || 'light'
   });
 
   // Carregar configurações
@@ -80,6 +82,12 @@ const SystemSettings = () => {
   // Atualizar configurações
   const handleChange = (e) => {
     const { name, value, checked } = e.target;
+    
+    // Se for mudança de tema, usar o ThemeContext
+    if (name === 'theme') {
+      changeTheme(value);
+    }
+    
     setSettings(prev => ({
       ...prev,
       [name]: e.target.type === 'checkbox' ? checked : value
@@ -253,13 +261,13 @@ const SystemSettings = () => {
                       <InputLabel>Tema do Sistema</InputLabel>
                       <Select
                         name="theme"
-                        value={settings.theme}
+                        value={themeMode}
                         label="Tema do Sistema"
                         onChange={handleChange}
                       >
                         <MenuItem value="light">Claro</MenuItem>
                         <MenuItem value="dark">Escuro</MenuItem>
-                        <MenuItem value="auto">Automático (Baseado no sistema)</MenuItem>
+                        <MenuItem value="system">Automático (Baseado no sistema)</MenuItem>
                       </Select>
                     </FormControl>
                   </Grid>

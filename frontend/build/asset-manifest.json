@@ -1,0 +1,29 @@
+{
+  "files": {
+    "main.css": "/static/css/main.5ab49b1e.chunk.css",
+    "main.js": "/static/js/main.32b87a81.chunk.js",
+    "main.js.map": "/static/js/main.32b87a81.chunk.js.map",
+    "runtime-main.js": "/static/js/runtime-main.92b3ca00.js",
+    "runtime-main.js.map": "/static/js/runtime-main.92b3ca00.js.map",
+    "static/js/2.bfa09c74.chunk.js": "/static/js/2.bfa09c74.chunk.js",
+    "static/js/2.bfa09c74.chunk.js.map": "/static/js/2.bfa09c74.chunk.js.map",
+    "index.html": "/index.html",
+    "precache-manifest.ab6ba53f7231acc6a4eea4b1db868e96.js": "/precache-manifest.ab6ba53f7231acc6a4eea4b1db868e96.js",
+    "service-worker.js": "/service-worker.js",
+    "static/css/main.5ab49b1e.chunk.css.map": "/static/css/main.5ab49b1e.chunk.css.map",
+    "static/js/2.bfa09c74.chunk.js.LICENSE.txt": "/static/js/2.bfa09c74.chunk.js.LICENSE.txt",
+    "static/media/HP.png": "/static/media/HP.f993acd6.png",
+    "static/media/logo_hp_branco.png": "/static/media/logo_hp_branco.81368716.png",
+    "static/media/tela_login1.png": "/static/media/tela_login1.86037bd3.png",
+    "static/media/tela_login2.png": "/static/media/tela_login2.0ed20a27.png",
+    "static/media/tela_login3.png": "/static/media/tela_login3.2d71efc4.png",
+    "static/media/tela_login4.png": "/static/media/tela_login4.92d3e0a6.png",
+    "static/media/tela_login5.png": "/static/media/tela_login5.fbaf4f50.png"
+  },
+  "entrypoints": [
+    "static/js/runtime-main.92b3ca00.js",
+    "static/js/2.bfa09c74.chunk.js",
+    "static/css/main.5ab49b1e.chunk.css",
+    "static/js/main.32b87a81.chunk.js"
+  ]
+}

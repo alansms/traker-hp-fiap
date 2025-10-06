@@ -1,37 +1,41 @@
-FROM node:14-alpine
+FROM node:16-alpine
 
 WORKDIR /app
-
-# Criar usuário não-root
-RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 
 # Copiar arquivos de configuração
 COPY package*.json ./
 
-# Instalar serve globalmente como root
-RUN npm install -g serve
+# Instalar dependências sem verificar erros
+ENV DISABLE_ESLINT_PLUGIN=true
+ENV NODE_ENV=development
+ENV ESLINT_NO_DEV_ERRORS=true
+ENV CI=true
 
-# Configurar permissões
-RUN chown -R appuser:appgroup /app
-
-# Mudar para o usuário não-root
-USER appuser
-
-# Limpar cache e instalar dependências
+# Instalar dependências
 RUN npm cache clean --force && \
     npm install --legacy-peer-deps
 
 # Copiar código fonte
-COPY --chown=appuser:appgroup . .
+COPY . .
 
-# Build de produção
+# Criar arquivo .env para garantir que o ESLint seja desabilitado
+RUN echo "DISABLE_ESLINT_PLUGIN=true\nESLINT_NO_DEV_ERRORS=true\nCHOKIDAR_USEPOLLING=true\nFAST_REFRESH=false" > .env
+
+# Configurar variáveis de ambiente para tornar o servidor de desenvolvimento mais estável
 ENV DISABLE_ESLINT_PLUGIN=true
-ENV GENERATE_SOURCEMAP=false
-ENV CI=false
-RUN npm run build
+ENV CHOKIDAR_USEPOLLING=true
+ENV FAST_REFRESH=false
+ENV BROWSER=none
+ENV WATCHPACK_POLLING=true
+ENV REACT_APP_SKIP_PREFLIGHT_CHECK=true
+ENV NODE_OPTIONS="--max-old-space-size=4096"
+ENV WDS_SOCKET_PORT=0
+ENV PORT=80
+ENV CI=true
+ENV ESLINT_NO_DEV_ERRORS=true
 
-# Expor a porta que o servidor estático usará
-EXPOSE 3000
+# Expor a porta que o servidor de desenvolvimento usará
+EXPOSE 80
 
-# Servir a build de produção
-CMD ["serve", "-s", "build", "-l", "3000"]
+# Comando para iniciar o servidor de desenvolvimento com porta 80
+CMD ["sh", "-c", "npm start"]

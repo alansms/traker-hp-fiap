@@ -19,12 +19,9 @@ import {
   Store,
   PeopleAlt,
   Settings,
-  Chat,
   ChevronLeft,
   ChevronRight,
   Search,
-  People as PeopleIcon,
-  List as ListIcon,
   BarChart,
 } from '@mui/icons-material';
 import { useAuth } from '../../hooks/useAuth';
@@ -99,15 +96,13 @@ const Sidebar = () => {
       path: '/sellers',
       badge: user && (user.role === 'admin' || user.is_superuser || user.is_admin) ? 'Novo' : null
     },
-    { text: 'Assistente', icon: <Chat />, path: '/chat' },
     { text: 'Configurações', icon: <Settings />, path: '/settings' },
   ];
 
-  // Itens de menu apenas para administradores
+  // Itens de menu apenas para administradores (centralizados na página de configurações)
   const adminMenuItems = [
-    { text: 'Usuários', icon: <PeopleIcon />, path: '/users' },
-    { text: 'Aprovação de Usuários', icon: <PeopleIcon />, path: '/settings/user-approval' },
-    { text: 'Logs do Sistema', icon: <ListIcon />, path: '/logs' },
+    // Removidos: Usuários, Aprovação de Usuários e Logs do Sistema
+    // Agora centralizados na página /settings
   ];
 
   return (

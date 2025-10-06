@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 from app.db.session import engine, Base, SessionLocal
 from app.db.init_db import init_db
-from app.routers import auth, chat, openai, scraping, users, settings as settings_router, logs, dashboard, products, analytics, data_analysis_ai
+from app.routers import auth, chat, openai, scraping, users, settings as settings_router, logs, logs_simple, logs_test, logs_basic, dashboard, products, analytics, data_analysis_ai, products_import, dashboard_postgres, suspicious_config, intelligent_scraping, data_cleanup, scraping_control, alerts, alerts_simple, alerts_basic, alerts_test, alerts_debug, email_test, email_simple
 from app.middlewares.logging import LoggingMiddleware
 from app.middlewares.debug import log_request_details  # Importando o middleware de depuração
 
@@ -25,32 +25,25 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# Configurar CORS
-# Configurar CORS - versão atualizada para permitir acesso externo
-# Configurar CORS
+# Configuração CORS corrigida para resolver o erro de credenciais com wildcard
 origins = [
-    settings.FRONTEND_URL,
     "http://localhost",
     "http://localhost:3000",
-    "http://173.21.101.62",
-    "http://173.21.101.62:3000",
-    "http://173.21.101.62:3001",
-    "http://173.21.101.62:3002",
-    "http://173.21.101.62:80",
-    "http://172.21.101.185",       # Adicionando o IP específico que está sendo usado
-    "http://172.21.101.185:3000",  # Adicionando com a porta 3000
-    "http://172.21.101.185:8000",  # Adicionando com a porta 8000
-    "http://172.21.101.185:80",    # Adicionando com a porta 80
-    "*",  # Permite todas as origens durante desenvolvimento
+    "http://localhost:3001",  # Origem do frontend que está causando o erro
+    "http://127.0.0.1",
+    "http://127.0.0.1:3000",
+    "http://127.0.0.1:3001",
 ]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=origins,  # Usando a lista específica de origens
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
-) # Adicionar middleware de logging
+)
+
+# Adicionar middleware de logging
 app.add_middleware(LoggingMiddleware)
 
 # Adicionar middleware de depuração para inspecionar requisições
@@ -68,10 +61,26 @@ app.include_router(scraping.router, prefix="/api/scraping", tags=["Scraping"])
 app.include_router(users.router, prefix="/api/users", tags=["Usuários"])
 app.include_router(settings_router.router, prefix="/api/settings", tags=["Configurações"])
 app.include_router(logs.router, prefix="/api/logs", tags=["Logs do Sistema"])
+app.include_router(logs_simple.router, prefix="/api/logs-simple", tags=["Logs Simples"])
+app.include_router(logs_test.router, prefix="/api/logs-test", tags=["Logs Teste"])
+app.include_router(logs_basic.router, prefix="/api/logs-basic", tags=["Logs Básico"])
 app.include_router(dashboard.router, prefix="/api/dashboard", tags=["Dashboard"])
+app.include_router(dashboard_postgres.router, prefix="/api/dashboard-postgres", tags=["Dashboard PostgreSQL"])
 app.include_router(products.router, prefix="/api/products", tags=["Produtos"])
+app.include_router(products_import.router, prefix="/api/products", tags=["Importação de Produtos"])  # Novo router de importação
 app.include_router(analytics.router, prefix="/api/analytics", tags=["Analytics"])  # Adicionando a rota de analytics
 app.include_router(data_analysis_ai.router, prefix="/api/ai", tags=["Análise de Dados com IA"])
+app.include_router(suspicious_config.router, prefix="/api/suspicious", tags=["Configuração de Suspeitos"])
+app.include_router(intelligent_scraping.router, prefix="/api/scraping", tags=["Scraping Inteligente"])
+app.include_router(data_cleanup.router, prefix="/api/cleanup", tags=["Limpeza de Dados"])
+app.include_router(scraping_control.router, prefix="/api/scraping-control", tags=["Controle de Scraping"])
+app.include_router(alerts.router, prefix="/api/alerts", tags=["Alertas"])
+app.include_router(alerts_simple.router, prefix="/api/alerts-simple", tags=["Alertas Simples"])
+app.include_router(alerts_basic.router, prefix="/api/alerts-basic", tags=["Alertas Básico"])
+app.include_router(alerts_test.router, prefix="/api/alerts-test", tags=["Alertas Teste"])
+app.include_router(alerts_debug.router, prefix="/api/alerts-debug", tags=["Alertas Debug"])
+app.include_router(email_test.router, prefix="/api/email", tags=["Teste de Email"])
+app.include_router(email_simple.router, prefix="/api/email-simple", tags=["Email Simples"])
 
 # Rota pública para busca de produtos (sem autenticação)
 @app.get("/api/scraping/search-public", tags=["Scraping Público"])

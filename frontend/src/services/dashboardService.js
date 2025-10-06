@@ -9,11 +9,13 @@ const dashboardService = {
    */
   getTopProducts: async (size = 10, periodDays = 30) => {
     try {
-      const response = await api.get(`/api/dashboard/top-products?size=${size}&period_days=${periodDays}`);
+      // Usar endpoint PostgreSQL que tem dados reais
+      const response = await api.get(`/api/dashboard-postgres/top-products?size=${size}&period_days=${periodDays}`);
       return response;
     } catch (error) {
       console.error('Erro ao buscar top produtos:', error);
-      throw error;
+      // Retornar dados vazios em caso de erro
+      return { data: [], success: false, message: 'Erro ao carregar dados' };
     }
   },
 
@@ -40,11 +42,11 @@ const dashboardService = {
    */
   getSearchTrends: async (periodDays = 30) => {
     try {
-      const response = await api.get(`/api/dashboard/search-trends?period_days=${periodDays}`);
+      const response = await api.get(`/api/dashboard-postgres/search-trends?period_days=${periodDays}`);
       return response;
     } catch (error) {
       console.error('Erro ao buscar tendências de busca:', error);
-      throw error;
+      return { data: [], success: false, message: 'Erro ao carregar dados' };
     }
   },
 
@@ -55,11 +57,26 @@ const dashboardService = {
    */
   getDailySearches: async (periodDays = 30) => {
     try {
-      const response = await api.get(`/api/dashboard/daily-searches?period_days=${periodDays}`);
+      const response = await api.get(`/api/dashboard-postgres/daily-searches?period_days=${periodDays}`);
       return response;
     } catch (error) {
       console.error('Erro ao buscar buscas diárias:', error);
-      throw error;
+      return { data: [], success: false, message: 'Erro ao carregar dados' };
+    }
+  },
+
+  /**
+   * Obtém a distribuição de preços
+   * @param {number} periodDays - Período em dias para análise
+   * @returns {Promise} - Promise com os resultados
+   */
+  getPriceDistribution: async (periodDays = 30) => {
+    try {
+      const response = await api.get(`/api/dashboard-postgres/price-distribution?period_days=${periodDays}`);
+      return response;
+    } catch (error) {
+      console.error('Erro ao buscar distribuição de preços:', error);
+      return { data: [], success: false, message: 'Erro ao carregar dados' };
     }
   },
 
@@ -71,11 +88,11 @@ const dashboardService = {
    */
   getTopRatedProducts: async (size = 10, periodDays = 30) => {
     try {
-      const response = await api.get(`/api/dashboard/top-rated-products?size=${size}&period_days=${periodDays}`);
+      const response = await api.get(`/api/dashboard-postgres/top-rated-products?size=${size}&period_days=${periodDays}`);
       return response;
     } catch (error) {
       console.error('Erro ao buscar produtos melhor avaliados:', error);
-      throw error;
+      return { data: [], success: false, message: 'Erro ao carregar dados' };
     }
   },
 

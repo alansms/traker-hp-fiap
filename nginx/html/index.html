@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mercado Livre Tracker - HP</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        header {
+            background-color: #0046be;
+            color: white;
+            text-align: center;
+            padding: 2rem 0;
+            margin-bottom: 2rem;
+        }
+        h1 {
+            margin: 0;
+        }
+        .card {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .api-link {
+            display: inline-block;
+            background-color: #0046be;
+            color: white;
+            padding: 10px 15px;
+            text-decoration: none;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .api-link:hover {
+            background-color: #003da6;
+        }
+        code {
+            background-color: #f0f0f0;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-family: monospace;
+            display: block;
+            padding: 10px;
+            margin: 10px 0;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Mercado Livre Tracker - HP</h1>
+        <p>Monitoramento de produtos e preços</p>
+    </header>
+
+    <div class="container">
+        <div class="card">
+            <h2>Bem-vindo!</h2>
+            <p>O frontend está temporariamente indisponível, mas você ainda pode acessar a API diretamente.</p>
+            <p>Clique nos links abaixo para acessar as principais rotas da API:</p>
+
+            <h3>Dashboard</h3>
+            <ul>
+                <li><a href="/api/dashboard/top-products" class="api-link">Top Produtos</a></li>
+                <li><a href="/api/dashboard/price-evolution?product=notebook" class="api-link">Evolução de Preço (Notebook)</a></li>
+                <li><a href="/api/dashboard/search-trends" class="api-link">Tendências de Busca</a></li>
+                <li><a href="/api/dashboard/daily-searches" class="api-link">Buscas Diárias</a></li>
+                <li><a href="/api/dashboard/price-distribution" class="api-link">Distribuição de Preços</a></li>
+                <li><a href="/api/dashboard/top-rated-products" class="api-link">Produtos Mais Bem Avaliados</a></li>
+            </ul>
+
+            <h3>Documentação da API</h3>
+            <p>Para ver a documentação completa da API:</p>
+            <a href="/api/docs" class="api-link">Documentação Swagger</a>
+
+            <h3>Informações de Uso</h3>
+            <p>Para buscar informações sobre um produto específico:</p>
+            <code>GET /api/dashboard/price-evolution?product=NOME_DO_PRODUTO</code>
+
+            <p>Para ver os principais produtos:</p>
+            <code>GET /api/dashboard/top-products?size=20</code>
+        </div>
+    </div>
+</body>
+</html>
+

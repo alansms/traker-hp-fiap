@@ -108,8 +108,9 @@ def scrape_product_details(product_url):
         return None
 
     # Identificador único do produto
-    product_id_match = re.search(r'MLB-(\d+)', product_url) or re.search(r'MLB(\d+)', product_url)
-    product_id = product_id_match.group(1) if product_id_match else str(uuid.uuid4())[:8]
+    product_id_match = re.search(r'(MLB-?\d+)', product_url)
+    ml_item_id = product_id_match.group(1) if product_id_match else None
+    product_id = (ml_item_id or str(uuid.uuid4())[:8]).replace('-', '')
 
     # Título do produto
     title_element = soup.select_one("h1.ui-pdp-title")
@@ -127,17 +128,59 @@ def scrape_product_details(product_url):
 
     price = extract_price(price_text)
 
-    # Vendedor
-    # Atualizando o seletor para corresponder à estrutura atual do site
-    seller_element = soup.select_one("button.ui-pdp-seller__link-trigger-button span:last-child")
-    if not seller_element:
-        # Tentativa alternativa com seletor anterior
-        seller_element = soup.select_one("div.ui-pdp-seller__header a.ui-pdp-action-modal__link")
-    seller_name = clean_text(seller_element) or "Vendedor não identificado"
+    # Vendedor - Atualizando seletores para capturar corretamente
+    seller_name = "Vendedor não identificado"
+    
+    # Tentar múltiplos seletores para encontrar o vendedor
+    seller_selectors = [
+        "button.ui-pdp-seller__link-trigger-button span:last-child",  # Seletor principal
+        "button.ui-pdp-seller__link-trigger-button span:not(.ui-pdp-seller__label-sold)",  # Excluir "Vendido por"
+        "div.ui-pdp-seller__header a.ui-pdp-action-modal__link",
+        "span.ui-pdp-seller__header__title",
+        ".ui-pdp-seller__header__title",
+        "button[class*='ui-pdp-seller'] span:not([class*='label'])",
+        ".ui-pdp-seller__link-trigger-button span:last-child"
+    ]
+    
+    for selector in seller_selectors:
+        seller_element = soup.select_one(selector)
+        if seller_element:
+            seller_text = clean_text(seller_element)
+            # Filtrar textos que não são o nome do vendedor
+            if seller_text and seller_text not in ["Vendido por", "Vendido", "por"] and len(seller_text) > 2:
+                seller_name = seller_text
+                break
 
     # Reputação do vendedor
     reputation_element = soup.select_one("p.ui-seller-info__status-info")
     reputation = clean_text(reputation_element) or "Não informada"
+    
+    # Extrair seller_id se disponível
+    seller_id = None
+    seller_link = soup.select_one("button.ui-pdp-seller__link-trigger-button")
+    if seller_link and seller_link.get('data-seller-id'):
+        seller_id = seller_link.get('data-seller-id')
+    
+    # Tentar extrair rating do vendedor
+    seller_rating = None
+    rating_selectors = [
+        ".ui-seller-info__status-info",
+        ".ui-pdp-seller__reputation",
+        "span[class*='seller-rating']"
+    ]
+    
+    for selector in rating_selectors:
+        rating_element = soup.select_one(selector)
+        if rating_element:
+            rating_text = clean_text(rating_element)
+            # Procurar por números que podem ser ratings
+            rating_match = re.search(r'(\d+(?:\.\d+)?)', rating_text)
+            if rating_match:
+                try:
+                    seller_rating = float(rating_match.group(1))
+                    break
+                except ValueError:
+                    continue
 
     # Disponibilidade
     availability_element = soup.select_one("span.ui-pdp-buybox__quantity__available")
@@ -198,7 +241,11 @@ def scrape_product_details(product_url):
         "title": title,
         "price": price,
         "url": product_url,
+        "ml_item_id": ml_item_id,
         "seller": seller_name,
+        "seller_name": seller_name,  # Para compatibilidade
+        "seller_id": seller_id,
+        "seller_rating": seller_rating,
         "seller_reputation": reputation,
         "stock": stock,
         "availability": availability_text,

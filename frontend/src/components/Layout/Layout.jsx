@@ -2,6 +2,7 @@ import React from 'react';
 import { Box, useTheme, useMediaQuery } from '@mui/material';
 import Sidebar, { useSidebar } from './Sidebar';
 import Topbar from './Topbar';
+import FloatingChat from '../Chat/FloatingChat';
 
 const Layout = ({ children }) => {
   const { expanded } = useSidebar();
@@ -54,6 +55,9 @@ const Layout = ({ children }) => {
           {children}
         </Box>
       </Box>
+      
+      {/* Chat flutuante */}
+      <FloatingChat />
     </Box>
   );
 };

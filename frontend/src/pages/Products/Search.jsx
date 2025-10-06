@@ -28,6 +28,7 @@ import {
   MonitorHeart
 } from '@mui/icons-material';
 import scrapingService from '../../services/scrapingService';
+import { createProduct } from '../../services/products';
 
 const Search = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -41,6 +42,18 @@ const Search = () => {
   const [monitorDialog, setMonitorDialog] = useState(false);
   const [targetPrice, setTargetPrice] = useState('');
   const [email, setEmail] = useState('');
+  
+  // Cadastro de produto
+  const [registerDialog, setRegisterDialog] = useState(false);
+  const [registering, setRegistering] = useState(false);
+  const [productToRegister, setProductToRegister] = useState(null);
+  const [productForm, setProductForm] = useState({
+    name: '',
+    pn: '',
+    family: '',
+    reference_price: 0,
+    check_interval: 6
+  });
 
   const handleSearch = async (e) => {
     e.preventDefault();
@@ -74,6 +87,68 @@ const Search = () => {
   const handleAddProduct = (product) => {
     setSelectedProduct(product);
     setShowAddDialog(true);
+  };
+
+  // Função para abrir modal de cadastro
+  const handleRegisterProduct = (product) => {
+    setProductToRegister(product);
+    setProductForm({
+      name: product.title,
+      pn: product.id, // Usar o ID como PN temporário
+      family: 'Cartuchos', // Categoria padrão
+      reference_price: product.price,
+      check_interval: 6
+    });
+    setRegisterDialog(true);
+  };
+
+  // Função para cadastrar produto
+  const handleConfirmRegister = async () => {
+    if (!productToRegister) return;
+
+    setRegistering(true);
+    try {
+      const productData = {
+        name: productForm.name,
+        pn: productForm.pn,
+        url: productToRegister.link,
+        family: productForm.family,
+        reference_price: productForm.reference_price,
+        check_interval: productForm.check_interval
+      };
+
+      await createProduct(productData);
+      
+      setSnackbarState({
+        open: true,
+        message: `Produto "${productForm.name}" cadastrado com sucesso!`,
+        type: 'success'
+      });
+      
+      setRegisterDialog(false);
+      setProductToRegister(null);
+    } catch (error) {
+      setSnackbarState({
+        open: true,
+        message: `Erro ao cadastrar produto: ${error.message}`,
+        type: 'error'
+      });
+    } finally {
+      setRegistering(false);
+    }
+  };
+
+  // Função para fechar modal de cadastro
+  const handleCloseRegister = () => {
+    setRegisterDialog(false);
+    setProductToRegister(null);
+    setProductForm({
+      name: '',
+      pn: '',
+      family: '',
+      reference_price: 0,
+      check_interval: 6
+    });
   };
 
   const confirmAddProduct = async () => {
@@ -286,6 +361,14 @@ const Search = () => {
                     </Button>
                     <Button
                       size="small"
+                      onClick={() => handleRegisterProduct(product)}
+                      color="success"
+                      variant="contained"
+                    >
+                      Cadastrar Produto
+                    </Button>
+                    <Button
+                      size="small"
                       onClick={() => handleAddProduct(product)}
                       color="primary"
                     >
@@ -375,6 +458,95 @@ const Search = () => {
             disabled={!targetPrice || !email}
           >
             Iniciar Monitoramento
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Dialog para cadastrar produto */}
+      <Dialog open={registerDialog} onClose={handleCloseRegister} maxWidth="sm" fullWidth>
+        <DialogTitle>Cadastrar Produto no Sistema</DialogTitle>
+        <DialogContent>
+          {productToRegister && (
+            <Box>
+              <Typography variant="h6" gutterBottom>
+                {productToRegister.title}
+              </Typography>
+              <Typography variant="body2" color="text.secondary" gutterBottom>
+                Preço encontrado: {formatPrice(productToRegister.price)}
+              </Typography>
+              
+              <Box sx={{ mt: 3 }}>
+                <Grid container spacing={2}>
+                  <Grid item xs={12}>
+                    <TextField
+                      fullWidth
+                      label="Nome do Produto"
+                      value={productForm.name}
+                      onChange={(e) => setProductForm({...productForm, name: e.target.value})}
+                      required
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      fullWidth
+                      label="Part Number (PN)"
+                      value={productForm.pn}
+                      onChange={(e) => setProductForm({...productForm, pn: e.target.value})}
+                      required
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      fullWidth
+                      label="Família/Categoria"
+                      value={productForm.family}
+                      onChange={(e) => setProductForm({...productForm, family: e.target.value})}
+                      select
+                      SelectProps={{ native: true }}
+                    >
+                      <option value="Cartuchos">Cartuchos</option>
+                      <option value="Toners">Toners</option>
+                      <option value="Impressoras">Impressoras</option>
+                      <option value="Acessórios">Acessórios</option>
+                      <option value="Outros">Outros</option>
+                    </TextField>
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      fullWidth
+                      label="Preço de Referência (R$)"
+                      type="number"
+                      value={productForm.reference_price}
+                      onChange={(e) => setProductForm({...productForm, reference_price: parseFloat(e.target.value) || 0})}
+                      inputProps={{ step: 0.01, min: 0 }}
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      fullWidth
+                      label="Intervalo de Verificação (horas)"
+                      type="number"
+                      value={productForm.check_interval}
+                      onChange={(e) => setProductForm({...productForm, check_interval: parseInt(e.target.value) || 6})}
+                      inputProps={{ min: 1, max: 168 }}
+                    />
+                  </Grid>
+                </Grid>
+              </Box>
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseRegister} disabled={registering}>
+            Cancelar
+          </Button>
+          <Button
+            onClick={handleConfirmRegister}
+            variant="contained"
+            color="success"
+            disabled={registering || !productForm.name || !productForm.pn}
+          >
+            {registering ? <CircularProgress size={20} /> : 'Cadastrar Produto'}
           </Button>
         </DialogActions>
       </Dialog>

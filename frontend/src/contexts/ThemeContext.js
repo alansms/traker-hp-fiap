@@ -47,7 +47,7 @@ export const ThemeProvider = ({ children }) => {
   const [currentTheme, setCurrentTheme] = useState(lightTheme);
 
   // Detectar preferência do sistema
-  const prefersDarkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const prefersDarkMode = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)').matches : false;
 
   useEffect(() => {
     // Função para detectar mudanças na preferência do sistema
@@ -62,12 +62,16 @@ export const ThemeProvider = ({ children }) => {
     mediaQuery.addEventListener('change', handleChange);
 
     // Determinar o tema atual baseado na preferência
+    console.log('🎨 Aplicando tema:', { themeMode, prefersDarkMode });
     if (themeMode === 'light') {
+      console.log('🎨 Aplicando tema claro');
       setCurrentTheme(lightTheme);
     } else if (themeMode === 'dark') {
+      console.log('🎨 Aplicando tema escuro');
       setCurrentTheme(darkTheme);
     } else {
       // 'system' - usar preferência do sistema
+      console.log('🎨 Aplicando tema do sistema:', prefersDarkMode ? 'escuro' : 'claro');
       setCurrentTheme(prefersDarkMode ? darkTheme : lightTheme);
     }
 
@@ -77,6 +81,7 @@ export const ThemeProvider = ({ children }) => {
 
   // Função para alterar o tema
   const changeTheme = (newTheme) => {
+    console.log('🎨 Mudando tema para:', newTheme);
     setThemeMode(newTheme);
     localStorage.setItem('theme', newTheme);
   };

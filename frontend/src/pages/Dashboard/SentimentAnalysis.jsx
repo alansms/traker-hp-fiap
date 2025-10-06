@@ -34,7 +34,8 @@ import {
   Refresh as RefreshIcon,
   Info as InfoIcon,
   Visibility as VisibilityIcon,
-  Close as CloseIcon
+  Close as CloseIcon,
+  OpenInNew as OpenInNewIcon
 } from '@mui/icons-material';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 import sentimentAnalysisService from '../../services/sentimentAnalysisService';
@@ -511,6 +512,7 @@ const SentimentAnalysis = () => {
                         <TableCell align="center">Sentimento</TableCell>
                         <TableCell align="center">Score</TableCell>
                         <TableCell align="center">Data</TableCell>
+                        <TableCell align="center">Ver no ML</TableCell>
                       </TableRow>
                     </TableHead>
                     <TableBody>
@@ -541,7 +543,25 @@ const SentimentAnalysis = () => {
                             {comment.sentiment_score ? comment.sentiment_score.toFixed(2) : 'N/A'}
                           </TableCell>
                           <TableCell align="center">
-                            {new Date(comment.data).toLocaleDateString()}
+                            {comment.data ? new Date(comment.data).toLocaleDateString('pt-BR') : 'Data inválida'}
+                          </TableCell>
+                          <TableCell align="center">
+                            <IconButton
+                              size="small"
+                              color="primary"
+                              href={comment.ml_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              title="Ver produto no Mercado Livre"
+                              sx={{
+                                '&:hover': {
+                                  bgcolor: 'primary.light',
+                                  color: 'white'
+                                }
+                              }}
+                            >
+                              <OpenInNewIcon fontSize="small" />
+                            </IconButton>
                           </TableCell>
                         </TableRow>
                       ))}

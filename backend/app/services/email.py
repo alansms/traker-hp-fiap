@@ -9,6 +9,67 @@ from app.core.config import settings
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# Configurações SMTP hardcoded (para garantir o funcionamento)
+SMTP_SERVER = "smtps.uhserver.com"
+SMTP_PORT = 465
+SMTP_USER = "tracker_hp@smstecnologia.com.br"
+SMTP_PASSWORD = "@#Pi231179"  # A senha já está como string, não precisa de aspas adicionais
+
+# Função específica para reenvio de email para tracker_hp@smstecnologia.com.br
+async def reenviar_aprovacao_para_email_especifico():
+    """
+    Função específica para reenviar email de aprovação para o email tracker_hp@smstecnologia.com.br
+    Criada para atender a um problema específico de não recebimento do email.
+
+    Returns:
+        bool: True se o email foi enviado com sucesso, False caso contrário
+    """
+    target_email = "tracker_hp@smstecnologia.com.br"
+    user_name = "Administrador do Sistema"
+
+    subject = "Aprovação de Cadastro (Reenvio) - Mercado Livre Tracker"
+
+    # Corpo em texto simples
+    body = f"""
+    Olá {user_name},
+    
+    Este é um reenvio de email de aprovação para sua conta no Mercado Livre Tracker.
+    
+    Seu cadastro está aprovado e você já pode acessar a plataforma com suas credenciais.
+    
+    Para acessar a tela de aprovação, use o seguinte link: {settings.FRONTEND_URL}/auth/approval
+    
+    Atenciosamente,
+    Equipe Mercado Livre Tracker
+    """
+
+    # Corpo em HTML
+    html_body = f"""
+    <html>
+        <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+            <div style="max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 5px;">
+                <h2 style="color: #2a41e8;">Aprovação de Cadastro (Reenvio)</h2>
+                <p>Olá <strong>{user_name}</strong>,</p>
+                
+                <p>Este é um <strong>reenvio</strong> de email de aprovação para sua conta no Mercado Livre Tracker.</p>
+                
+                <p>Seu cadastro está <strong>aprovado</strong> e você já pode acessar a plataforma com suas credenciais.</p>
+                
+                <p>Você pode <a href="{settings.FRONTEND_URL}/auth/approval" style="color: #2a41e8; text-decoration: none;">acessar a tela de aprovação clicando aqui</a>.</p>
+                
+                <p>Atenciosamente,<br>Equipe Mercado Livre Tracker</p>
+                
+                <div style="font-size: 12px; color: #777; margin-top: 20px; border-top: 1px solid #ddd; padding-top: 10px;">
+                    Este email foi reenviado manualmente devido a uma solicitação específica. Se você já recebeu este email anteriormente, por favor desconsidere esta mensagem.
+                </div>
+            </div>
+        </body>
+    </html>
+    """
+
+    logger.info(f"Tentando reenviar email de aprovação para {target_email}")
+    return await send_email(target_email, subject, body, html_body)
+
 async def send_email(to_email: str, subject: str, body: str, html_body: str = None) -> bool:
     """
     Envia um email usando as configurações SMTP definidas
@@ -22,19 +83,19 @@ async def send_email(to_email: str, subject: str, body: str, html_body: str = No
     Returns:
         bool: True se o email foi enviado com sucesso, False caso contrário
     """
-    # Verificar se as configurações de email estão definidas
-    if not all([settings.SMTP_SERVER, settings.SMTP_USER, settings.SMTP_PASSWORD]):
-        logger.error("Configurações de email incompletas")
-        logger.debug(f"SMTP_SERVER: {settings.SMTP_SERVER}")
-        logger.debug(f"SMTP_USER: {settings.SMTP_USER}")
-        logger.debug(f"SMTP_PORT: {settings.SMTP_PORT}")
-        return False
+    # Usar configurações hardcoded em vez das variáveis de ambiente
+    smtp_server = SMTP_SERVER
+    smtp_port = SMTP_PORT
+    smtp_user = SMTP_USER
+    smtp_password = SMTP_PASSWORD
+
+    logger.info(f"Usando configurações SMTP: Servidor={smtp_server}, Porta={smtp_port}, Usuário={smtp_user}")
 
     try:
         # Criar mensagem
         message = MIMEMultipart("alternative")
         message["Subject"] = subject
-        message["From"] = settings.SMTP_USER
+        message["From"] = smtp_user
         message["To"] = to_email
 
         # Adicionar versão em texto
@@ -44,29 +105,29 @@ async def send_email(to_email: str, subject: str, body: str, html_body: str = No
         if html_body:
             message.attach(MIMEText(html_body, "html"))
 
-        logger.info(f"Tentando conectar ao servidor SMTP: {settings.SMTP_SERVER}:{settings.SMTP_PORT}")
+        logger.info(f"Tentando conectar ao servidor SMTP: {smtp_server}:{smtp_port}")
 
         # Criar contexto SSL para conexão segura
         context = ssl.create_default_context()
 
         try:
-            if settings.SMTP_PORT == 465:
+            if smtp_port == 465:
                 # Porta 465 usa SSL direto
                 logger.info("Usando SSL direto (porta 465)")
-                with smtplib.SMTP_SSL(settings.SMTP_SERVER, settings.SMTP_PORT, context=context, timeout=30) as server:
+                with smtplib.SMTP_SSL(smtp_server, smtp_port, context=context, timeout=30) as server:
                     logger.info("Tentando login no servidor SMTP")
-                    server.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
+                    server.login(smtp_user, smtp_password)
                     logger.info("Login bem-sucedido, enviando email")
                     server.send_message(message)
                     logger.info("Email enviado com sucesso")
                     return True
             else:
                 # Outras portas usam STARTTLS
-                logger.info(f"Usando STARTTLS (porta {settings.SMTP_PORT})")
-                with smtplib.SMTP(settings.SMTP_SERVER, settings.SMTP_PORT, timeout=30) as server:
+                logger.info(f"Usando STARTTLS (porta {smtp_port})")
+                with smtplib.SMTP(smtp_server, smtp_port, timeout=30) as server:
                     server.starttls(context=context)
                     logger.info("Tentando login no servidor SMTP")
-                    server.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
+                    server.login(smtp_user, smtp_password)
                     logger.info("Login bem-sucedido, enviando email")
                     server.send_message(message)
                     logger.info("Email enviado com sucesso")

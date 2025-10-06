@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   AppBar,
   Toolbar,
@@ -23,6 +23,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { useTheme } from '@mui/material/styles';
 import logoHpBranco from '../../assets/logo_hp_branco.png';
 import AppInfoModal from '../AppInfoModal';
+import NotificationBell from '../Alerts/NotificationBell';
 
 const Topbar = () => {
   const { user, logout } = useAuth();
@@ -30,6 +31,50 @@ const Topbar = () => {
   const theme = useTheme();
 
   const [anchorElUser, setAnchorElUser] = useState(null);
+  const [alerts, setAlerts] = useState([]);
+
+  // Carregar alertas para o sino de notificação
+  useEffect(() => {
+    const fetchAlerts = async () => {
+      try {
+        // Usar dados mockados simplificados para o popup
+        const mockAlerts = [
+          {
+            id: 1,
+            type: 'fake_product',
+            product: {
+              name: 'Cartucho HP 664XL Preto'
+            },
+            percentChange: -34.3,
+            seller: 'Vendedor Suspeito',
+            sellerRating: 2.1,
+            riskLevel: 'CRÍTICO',
+            createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), // 2 dias atrás
+            read: false
+          },
+          {
+            id: 2,
+            type: 'fake_product',
+            product: {
+              name: 'Cartucho HP 667 Colorido'
+            },
+            percentChange: -38.6,
+            seller: 'Vendedor Desconhecido',
+            sellerRating: 1.8,
+            riskLevel: 'CRÍTICO',
+            createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(), // 3 dias atrás
+            read: false
+          }
+        ];
+        console.log('🔔 Dados mockados do popup:', mockAlerts);
+        setAlerts(mockAlerts);
+      } catch (error) {
+        console.error('Erro ao carregar alertas:', error);
+      }
+    };
+
+    fetchAlerts();
+  }, []);
 
   const handleOpenUserMenu = (event) => {
     setAnchorElUser(event.currentTarget);
@@ -98,14 +143,7 @@ const Topbar = () => {
           </Box>
 
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <IconButton
-              size="large"
-              color="inherit"
-              sx={{ ml: 1 }}
-              onClick={() => navigate('/alerts')}
-            >
-              <NotificationsIcon />
-            </IconButton>
+            <NotificationBell alerts={alerts} />
 
             <Tooltip title="Opções da conta">
               <IconButton onClick={handleOpenUserMenu} sx={{ ml: 1 }}>

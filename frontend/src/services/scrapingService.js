@@ -110,14 +110,13 @@ export const getScrapingStatus = async () => {
 // Buscar produtos no Mercado Livre (para a página de pesquisa)
 export const searchProducts = async (searchTerm) => {
     try {
-        const headers = getAuthHeaders();
+        console.log(`Enviando requisição para: ${API_URL}/api/scraping/search-public?query=${encodeURIComponent(searchTerm)}`);
 
-        console.log(`Enviando requisição para: ${API_URL}/api/scraping/search?term=${encodeURIComponent(searchTerm)}`);
-
-        const response = await fetch(`${API_URL}/api/scraping/search?term=${encodeURIComponent(searchTerm)}`, {
+        const response = await fetch(`${API_URL}/api/scraping/search-public?query=${encodeURIComponent(searchTerm)}`, {
             method: 'GET',
-            headers,
-            credentials: 'include'
+            headers: {
+                'Content-Type': 'application/json'
+            }
         });
 
         console.log('Status da resposta:', response.status);

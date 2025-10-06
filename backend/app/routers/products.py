@@ -62,6 +62,91 @@ async def create_product(
         "product_id": db_product.id
     }
 
+@router.post("/bulk/", response_model=List[Dict[str, Any]])
+async def create_bulk_products(
+    products: List[Dict[str, Any]],
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Cria múltiplos produtos em lote.
+    Endpoint usado pelo frontend para importação em massa.
+    """
+    if current_user.role not in ["admin", "manager", "analyst"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Permissão negada. Apenas usuários autorizados podem importar produtos."
+        )
+
+    created_products = []
+    errors = []
+
+    for idx, product_data in enumerate(products):
+        try:
+            # Verificar se o produto já existe (por PN)
+            pn = product_data.get('pn') or product_data.get('code')
+            if pn:
+                existing = db.query(Product).filter(Product.pn == pn).first()
+                if existing:
+                    # Atualizar produto existente
+                    existing.name = product_data.get('name', existing.name)
+                    existing.family = product_data.get('family') or product_data.get('category')
+                    existing.reference_price = float(product_data.get('reference_price', 0) or product_data.get('referencePrice', 0) or product_data.get('currentPrice', 0) or 0)
+                    existing.is_active = product_data.get('is_active', True) if product_data.get('status') != 'inactive' else False
+                    existing.updated_at = datetime.now()
+                    db.commit()
+                    db.refresh(existing)
+                    
+                    created_products.append({
+                        "id": existing.id,
+                        "name": existing.name,
+                        "pn": existing.pn,
+                        "reference_price": existing.reference_price,
+                        "is_active": existing.is_active
+                    })
+                    continue
+
+            # Criar novo produto
+            new_product = Product(
+                name=product_data.get('name', ''),
+                pn=pn or '',
+                search_terms=product_data.get('name', ''),
+                family=product_data.get('family') or product_data.get('category'),
+                reference_price=float(product_data.get('reference_price', 0) or product_data.get('referencePrice', 0) or product_data.get('currentPrice', 0) or 0),
+                is_active=product_data.get('is_active', True) if product_data.get('status') != 'inactive' else False,
+                created_at=datetime.now(),
+                updated_at=datetime.now()
+            )
+            
+            db.add(new_product)
+            db.commit()
+            db.refresh(new_product)
+            
+            created_products.append({
+                "id": new_product.id,
+                "name": new_product.name,
+                "pn": new_product.pn,
+                "reference_price": new_product.reference_price,
+                "is_active": new_product.is_active
+            })
+            
+        except Exception as e:
+            errors.append(f"Erro no produto {idx + 1}: {str(e)}")
+            continue
+
+    # Registrar log
+    log = SystemLog(
+        action="bulk_create_products",
+        description=f"Importação em lote: {len(created_products)} produtos processados",
+        user_id=current_user.id,
+        level=LogLevel.MEDIUM,
+        category=LogCategory.PRODUCT
+    )
+    db.add(log)
+    db.commit()
+
+    return created_products
+
 @router.get("/", response_model=List[Dict[str, Any]])
 async def list_products(
     skip: int = 0,
@@ -212,6 +297,55 @@ async def delete_product(
     return {
         "success": True,
         "message": "Produto removido com sucesso"
+    }
+
+@router.put("/bulk/status", response_model=Dict[str, Any])
+async def update_products_status(
+    payload: Dict[str, Any],
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Atualiza o status (is_active) de múltiplos produtos em lote.
+    Body esperado: { "ids": [1,2,3], "is_active": true }
+    """
+    if current_user.role not in ["admin", "manager", "analyst"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Permissão negada. Apenas usuários autorizados podem editar produtos."
+        )
+
+    ids = payload.get("ids") or []
+    is_active = bool(payload.get("is_active", True))
+
+    if not isinstance(ids, list) or len(ids) == 0:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Lista de IDs inválida")
+
+    # Buscar produtos e atualizar
+    updated = 0
+    for pid in ids:
+        product = db.query(Product).filter(Product.id == pid).first()
+        if product:
+            product.is_active = is_active
+            updated += 1
+
+    db.commit()
+
+    # Registrar log
+    log = SystemLog(
+        action="bulk_update_status",
+        description=f"Atualização de status em lote: {updated} produtos -> {'ativo' if is_active else 'inativo'}",
+        user_id=current_user.id,
+        level=LogLevel.MEDIUM,
+        category=LogCategory.PRODUCT
+    )
+    db.add(log)
+    db.commit()
+
+    return {
+        "success": True,
+        "updated": updated,
+        "is_active": is_active
     }
 
 @router.post("/{product_id}/search", response_model=List[ProductSearch])

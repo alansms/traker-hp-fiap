@@ -10,17 +10,55 @@ const determineApiUrl = () => {
 
   // Se estamos acessando por IP ou domínio específico, use o mesmo para a API
   if (currentHost !== 'localhost' && currentHost !== '127.0.0.1') {
-    return `http://${currentHost}`;
+    return `http://${currentHost}:8000`; // Adicionando porta 8000 explicitamente
   }
 
-  // Use o IP específico como fallback
-  return 'http://173.21.101.62';
+  // Use localhost:8000 como fallback (em vez do IP específico)
+  return 'http://localhost:8000';
 };
 
 const API_URL = determineApiUrl();
 
+// Funções melhoradas para gerenciamento de token
+const setToken = (token) => {
+  if (token) {
+    console.log('Token armazenado no localStorage');
+    localStorage.setItem('token', token);
+    // Também armazenamos o token na sessionStorage para redundância
+    sessionStorage.setItem('token', token);
+  }
+};
+
 const getToken = () => {
-    return localStorage.getItem('token');
+  // Tenta obter o token do localStorage primeiro
+  let token = localStorage.getItem('token');
+
+  // Compatibilidade: alguns fluxos armazenam como "accessToken"
+  if (!token) {
+    const accessToken = localStorage.getItem('accessToken');
+    if (accessToken) {
+      token = accessToken;
+      // Sincroniza para a chave padrão
+      localStorage.setItem('token', accessToken);
+      sessionStorage.setItem('token', accessToken);
+    }
+  }
+
+  // Se ainda não encontrar, tenta no sessionStorage
+  if (!token) {
+    token = sessionStorage.getItem('token');
+    if (token) {
+      localStorage.setItem('token', token);
+    }
+  }
+
+  return token;
+};
+
+const clearToken = () => {
+  localStorage.removeItem('token');
+  sessionStorage.removeItem('token');
+  console.log('Token removido do armazenamento');
 };
 
 const getHeaders = () => {
@@ -34,6 +72,47 @@ const getHeaders = () => {
     }
 
     return headers;
+};
+
+// Função para fazer login e armazenar o token
+const login = async (email, password) => {
+    try {
+        console.log(`Tentando login com email: ${email}`);
+
+        const response = await fetch(`${API_URL}/api/auth/login`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            credentials: 'include', // Importante para manter cookies de sessão
+            body: JSON.stringify({ email, password })
+        });
+
+        const data = await response.json();
+        console.log('Resposta do login:', data);
+
+        if (!response.ok) {
+            const errorMessage = data.detail || 'Falha no login';
+            throw new Error(errorMessage);
+        }
+
+        // Se o login for bem-sucedido, armazene o token
+        if (data.access_token) {
+            setToken(data.access_token);
+        }
+
+        return data;
+    } catch (error) {
+        console.error('Erro durante o login:', error);
+        throw error;
+    }
+};
+
+// Função para fazer logout
+const logout = () => {
+    clearToken();
+    console.log('Logout realizado com sucesso');
+    // Você pode adicionar redirecionamento aqui se necessário
 };
 
 const get = async (url, params = {}) => {
@@ -60,6 +139,7 @@ const get = async (url, params = {}) => {
         const response = await fetch(fullUrl, {
             method: 'GET',
             headers: getHeaders(),
+            credentials: 'include', // Adicionado para garantir consistência com cookies
         });
 
         const responseData = await response.json();
@@ -85,6 +165,7 @@ const post = async (url, data) => {
         const response = await fetch(`${API_URL}${url}`, {
             method: 'POST',
             headers: getHeaders(),
+            credentials: 'include', // Adicionado para garantir consistência com cookies
             body: JSON.stringify(data)
         });
 

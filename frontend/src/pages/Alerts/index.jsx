@@ -1,16 +1,84 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
+import {
+  Box,
+  Container,
+  Typography,
+  Paper,
+  Grid,
+  Chip,
+  Alert,
+  Button,
+  IconButton,
+  Tooltip,
+  Badge,
+  Card,
+  CardContent,
+  CardActions,
+  Divider,
+  List,
+  ListItem,
+  ListItemIcon,
+  ListItemText,
+  Avatar,
+  CircularProgress,
+  Fab,
+  Checkbox,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions
+} from '@mui/material';
+import {
+  Warning as WarningIcon,
+  Error as ErrorIcon,
+  Info as InfoIcon,
+  Notifications as BellIcon,
+  Refresh as RefreshIcon,
+  Settings as SettingsIcon,
+  FilterList as FilterIcon,
+  Close as CloseIcon,
+  Clear as ClearIcon,
+  CheckCircle as CheckCircleIcon,
+  Security as SecurityIcon,
+  TrendingDown as TrendingDownIcon,
+  Store as StoreIcon,
+  Star as StarIcon,
+  AttachMoney as AttachMoneyIcon
+} from '@mui/icons-material';
+import AlertSettingsModal from '../../components/Alerts/AlertSettingsModal';
+
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
 
 const Alerts = () => {
   const [loading, setLoading] = useState(true);
   const [alerts, setAlerts] = useState([]);
+  const [filteredAlerts, setFilteredAlerts] = useState([]);
   const [filters, setFilters] = useState({
-    search: '',
     type: 'all',
-    dateRange: 'all',
-    onlyUnread: false
+    timeframe: '7days',
+    onlyUnread: false,
+    productName: '',
+    sellerName: ''
   });
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
+  // Contadores de estatísticas
+  const [criticalAlerts, setCriticalAlerts] = useState(0);
+  const [highRiskAlerts, setHighRiskAlerts] = useState(0);
+  const [possibleCounterfeit, setPossibleCounterfeit] = useState(0);
+  const [unreadAlerts, setUnreadAlerts] = useState(0);
+  // Seleção e watchlist
+  const [selectedIds, setSelectedIds] = useState([]);
+  const [watchlist, setWatchlist] = useState(() => {
+    try {
+      const saved = localStorage.getItem('alerts_watchlist');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+  const [openReport, setOpenReport] = useState(false);
   
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -22,361 +90,742 @@ const Alerts = () => {
       return;
     }
     
-    // Carregar alertas
+    // Carregar alertas + estatísticas (usando dados mockados)
     const fetchAlerts = async () => {
       try {
-        // Aqui seriam as chamadas reais para a API
-        // Simulando dados para exemplo
+        setLoading(true);
+        
+        // Sempre usar dados mockados por enquanto
+        console.log('🔄 Usando dados mockados para alertas');
+        
+        // Estatísticas mockadas
+        setCriticalAlerts(2);
+        setHighRiskAlerts(0);
+        setPossibleCounterfeit(2);
+        setUnreadAlerts(2);
+        
+        // Dados mockados dos alertas
         const mockAlerts = [
-          { 
-            id: 1, 
-            type: 'price_drop',
-            product: 'Cartucho HP 664XL Preto',
-            productId: 1,
-            oldPrice: 99.90,
-            newPrice: 89.90,
-            seller: 'Loja Oficial HP',
-            sellerId: 1,
-            date: '2025-05-23T14:30:00',
-            read: false
+          {
+            id: 1,
+            type: 'fake_product',
+            product: {
+              id: 1,
+              name: 'Cartucho HP 664XL Preto',
+              pn: 'F6V29AB',
+              referencePrice: 69.9
+            },
+            currentPrice: 45.9,
+            percentChange: -34.3,
+            seller: 'Vendedor Suspeito',
+            sellerRating: 2.1,
+            riskLevel: 'CRÍTICO',
+            createdAt: new Date(Date.now() - 273 * 24 * 60 * 60 * 1000).toISOString(),
+            read: false,
+            description: 'Preço 34% abaixo do valor de referência - POSSÍVEL FALSIFICAÇÃO',
+            isVerified: false,
+            isFalsePositive: false,
+            productUrl: 'https://www.mercadolivre.com.br/cartucho-hp-664xl-preto',
+            imageUrl: 'https://http2.mlstatic.com/cartucho-hp-664xl.jpg'
           },
-          { 
-            id: 2, 
-            type: 'unauthorized_seller',
-            product: 'Cartucho HP 664 Colorido',
-            productId: 2,
-            price: 79.90,
-            seller: 'TintasShop',
-            sellerId: 2,
-            date: '2025-05-23T10:15:00',
-            read: true
-          },
-          { 
-            id: 3, 
-            type: 'price_increase',
-            product: 'Cartucho Epson 544 Preto',
-            productId: 3,
-            oldPrice: 49.90,
-            newPrice: 59.90,
-            seller: 'Epson Brasil',
-            sellerId: 3,
-            date: '2025-05-22T16:45:00',
-            read: false
-          },
-          { 
-            id: 4, 
-            type: 'price_drop',
-            product: 'Cartucho Canon PG-210XL Preto',
-            productId: 4,
-            oldPrice: 129.90,
-            newPrice: 119.90,
-            seller: 'Canon Store',
-            sellerId: 4,
-            date: '2025-05-21T09:30:00',
-            read: true
-          },
-          { 
-            id: 5, 
-            type: 'stock_issue',
-            product: 'Cartucho Brother LC103 Preto',
-            productId: 5,
-            seller: 'Suprimentos Online',
-            sellerId: 5,
-            date: '2025-05-20T11:20:00',
-            read: true,
-            message: 'Produto indisponível há mais de 7 dias'
+          {
+            id: 2,
+            type: 'fake_product',
+            product: {
+              id: 2,
+              name: 'Cartucho HP 667 Colorido',
+              pn: '3YM79AB',
+              referencePrice: 69.9
+            },
+            currentPrice: 42.9,
+            percentChange: -38.6,
+            seller: 'Vendedor Desconhecido',
+            sellerRating: 1.8,
+            riskLevel: 'CRÍTICO',
+            createdAt: new Date(Date.now() - 273 * 24 * 60 * 60 * 1000).toISOString(),
+            read: false,
+            description: 'Preço 39% abaixo do valor de referência - POSSÍVEL FALSIFICAÇÃO',
+            isVerified: false,
+            isFalsePositive: false,
+            productUrl: 'https://www.mercadolivre.com.br/cartucho-hp-667-colorido',
+            imageUrl: 'https://http2.mlstatic.com/cartucho-hp-667.jpg'
           }
         ];
-        
         setAlerts(mockAlerts);
-        setLoading(false);
+        setFilteredAlerts(mockAlerts);
+        
       } catch (error) {
         console.error('Erro ao carregar alertas:', error);
+        setAlerts([]);
+        setFilteredAlerts([]);
+      } finally {
         setLoading(false);
       }
     };
     
     fetchAlerts();
   }, [user, navigate]);
+  
+  // Aplicar filtros
+  useEffect(() => {
+    let filtered = [...alerts];
+    
+    if (filters.type !== 'all') {
+      filtered = filtered.filter(alert => alert.type === filters.type);
+    }
 
-  // Filtrar alertas
-  const filteredAlerts = alerts.filter(alert => {
-    // Filtro de busca
-    if (filters.search && !alert.product.toLowerCase().includes(filters.search.toLowerCase()) && 
-        !alert.seller.toLowerCase().includes(filters.search.toLowerCase())) {
-      return false;
+    if (filters.onlyUnread) {
+      filtered = filtered.filter(alert => !alert.read);
     }
     
-    // Filtro de tipo
-    if (filters.type !== 'all' && alert.type !== filters.type) {
-      return false;
+    if (filters.productName) {
+      filtered = filtered.filter(alert => 
+        alert.product.name.toLowerCase().includes(filters.productName.toLowerCase())
+      );
     }
     
-    // Filtro de data
-    const alertDate = new Date(alert.date);
+    if (filters.sellerName) {
+      filtered = filtered.filter(alert => 
+        alert.seller.toLowerCase().includes(filters.sellerName.toLowerCase())
+      );
+    }
+    
+    setFilteredAlerts(filtered);
+  }, [alerts, filters]);
 
-    if (filters.dateRange === 'today') {
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      if (alertDate < today) {
-        return false;
-      }
-    } else if (filters.dateRange === 'week') {
-      const weekAgo = new Date();
-      weekAgo.setDate(weekAgo.getDate() - 7);
-      if (alertDate < weekAgo) {
-        return false;
-      }
-    } else if (filters.dateRange === 'month') {
-      const monthAgo = new Date();
-      monthAgo.setMonth(monthAgo.getMonth() - 1);
-      if (alertDate < monthAgo) {
-        return false;
-      }
-    }
-    
-    // Filtro de não lidos
-    if (filters.onlyUnread && alert.read) {
-      return false;
-    }
-    
-    return true;
-  });
-
-  // Manipular mudanças nos filtros
-  const handleFilterChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setFilters(prev => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value
-    }));
+  const toggleSelect = (id) => {
+    setSelectedIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
   };
 
-  // Marcar alerta como lido
-  const handleMarkAsRead = (alertId, e) => {
-    e.stopPropagation();
-    setAlerts(prev => prev.map(alert => 
+  const addSelectedToWatchlist = () => {
+    const source = selectedIds.length ? alerts.filter(a => selectedIds.includes(a.id)) : filteredAlerts;
+    const items = source.map(a => ({
+      id: a.id,
+      productId: a.product?.id,
+      productName: a.product?.name,
+      pn: a.product?.pn,
+      seller: a.seller,
+      riskLevel: a.riskLevel,
+      currentPrice: a.currentPrice,
+      referencePrice: a.product?.referencePrice,
+      percentChange: a.percentChange,
+      productUrl: a.productUrl,
+      createdAt: a.createdAt
+    }));
+    const merged = [...watchlist];
+    items.forEach(it => { if (!merged.find(m => m.id === it.id)) merged.push(it); });
+    setWatchlist(merged);
+    localStorage.setItem('alerts_watchlist', JSON.stringify(merged));
+    setSelectedIds([]);
+  };
+
+  const exportCsv = () => {
+    const data = selectedIds.length ? alerts.filter(a => selectedIds.includes(a.id)) : filteredAlerts;
+    const headers = ['ID','Produto','PN','Vendedor','Nivel','PrecoAtual','PrecoRef','VariacaoPercent','URL','CriadoEm'];
+    const rows = data.map(a => [
+      a.id,
+      a.product?.name || '',
+      a.product?.pn || '',
+      a.seller || '',
+      a.riskLevel || '',
+      a.currentPrice ?? '',
+      a.product?.referencePrice ?? '',
+      a.percentChange ?? '',
+      a.productUrl || '',
+      a.createdAt || ''
+    ]);
+    const csv = [headers.join(','), ...rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(','))].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `alertas_suspeitos_${new Date().toISOString().slice(0,19).replace(/[:T]/g,'-')}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const printPdf = () => window.print();
+
+  const handleMarkAsRead = async (alertId) => {
+    try {
+      const token = localStorage.getItem('accessToken') || localStorage.getItem('token');
+      const response = await fetch(`${API_URL}/api/alerts/${alertId}/mark-read`, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        // Atualizar estado local
+        setAlerts(prev => prev.map(alert => 
+          alert.id === alertId ? { ...alert, read: true } : alert
+        ));
+        setFilteredAlerts(prev => prev.map(alert => 
       alert.id === alertId ? { ...alert, read: true } : alert
     ));
-    // Aqui seria a chamada real para a API
+        // Atualizar contador de não lidos
+        setUnreadAlerts(prev => Math.max(0, prev - 1));
+      } else {
+        console.error('Erro ao marcar alerta como lido:', response.statusText);
+      }
+    } catch (error) {
+      console.error('Erro ao marcar alerta como lido:', error);
+    }
+  };
+  
+  const handleDeleteAlert = (alertId) => {
+    setAlerts(prev => prev.filter(alert => alert.id !== alertId));
   };
 
-  // Navegar para detalhes do produto
-  const handleAlertClick = (alert) => {
-    navigate(`/products/${alert.productId}`);
+  // Função para filtrar por tipo de alerta
+  const handleFilterByType = (type) => {
+    let filtered = [];
+    switch (type) {
+      case 'critical':
+        filtered = alerts.filter(alert => alert.riskLevel === 'CRÍTICO');
+        break;
+      case 'high':
+        filtered = alerts.filter(alert => alert.riskLevel === 'ALTO');
+        break;
+      case 'medium':
+        filtered = alerts.filter(alert => alert.riskLevel === 'MÉDIO');
+        break;
+      case 'unread':
+        filtered = alerts.filter(alert => !alert.read);
+        break;
+      default:
+        filtered = alerts;
+    }
+    setFilteredAlerts(filtered);
   };
 
-  // Formatar data relativa
-  const formatRelativeDate = (dateString) => {
+  // Função para limpar filtros e mostrar todos os alertas
+  const clearFilters = () => {
+    setFilteredAlerts(alerts);
+  };
+
+  const markAllAsRead = () => {
+    setAlerts(prev => prev.map(alert => ({ ...alert, read: true })));
+  };
+
+  // Estatísticas dos alertas vêm da API e são mantidas em estado
+
+  const getAlertIcon = (type) => {
+    switch (type) {
+      case 'fake_product':
+        return <ErrorIcon color="error" />;
+      case 'price_drop':
+        return <TrendingDownIcon color="warning" />;
+      case 'unauthorized_seller':
+        return <SecurityIcon color="warning" />;
+      default:
+        return <InfoIcon color="info" />;
+    }
+  };
+
+  const getRiskColor = (riskLevel) => {
+    switch (riskLevel) {
+      case 'CRÍTICO':
+        return 'error';
+      case 'ALTO':
+        return 'warning';
+      case 'MÉDIO':
+        return 'info';
+      default:
+        return 'default';
+    }
+  };
+
+  const formatTime = (dateString) => {
     const date = new Date(dateString);
     const now = new Date();
-    const diffMs = now - date;
-    const diffSec = Math.round(diffMs / 1000);
-    const diffMin = Math.round(diffSec / 60);
-    const diffHour = Math.round(diffMin / 60);
-    const diffDay = Math.round(diffHour / 24);
+    const diffInHours = Math.floor((now - date) / (1000 * 60 * 60));
     
-    if (diffSec < 60) {
-      return 'agora';
-    } else if (diffMin < 60) {
-      return `${diffMin} min atrás`;
-    } else if (diffHour < 24) {
-      return `${diffHour} h atrás`;
-    } else if (diffDay < 30) {
-      return `${diffDay} dias atrás`;
-    } else {
-      return date.toLocaleDateString('pt-BR');
-    }
+    if (diffInHours < 1) return 'Agora mesmo';
+    if (diffInHours < 24) return `${diffInHours}h atrás`;
+    const diffInDays = Math.floor(diffInHours / 24);
+    return `${diffInDays}d atrás`;
   };
 
   return (
-    <div className="flex h-screen bg-gray-100 dark:bg-gray-900">
-      <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Removendo a renderização redundante do Topbar */}
+    <Box sx={{ py: 3 }}>
+      <Container maxWidth="xl">
+        {/* Cabeçalho da Página */}
+        <Box sx={{ mb: 4, display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, justifyContent: 'space-between', alignItems: { xs: 'flex-start', sm: 'center' }, gap: 2 }}>
+          <Box>
+            <Typography variant="h4" component="h1" gutterBottom fontWeight="bold">
+              🚨 Detecção de Falsificação
+            </Typography>
+            <Typography variant="body1" color="text.secondary">
+              Sistema inteligente de alertas para produtos suspeitos
+            </Typography>
+          </Box>
 
-        <main className="flex-1 overflow-y-auto p-4">
-          <div className="container mx-auto">
-            {/* Cabeçalho */}
-            <div className="flex justify-between items-center mb-6">
-              <h1 className="text-2xl font-bold text-gray-800 dark:text-white">Alertas</h1>
-              <div className="flex items-center">
-                <span className="mr-2 text-sm text-gray-600 dark:text-gray-400">
-                  {alerts.filter(a => !a.read).length} não lidos
-                </span>
-                <button
-                  onClick={() => setAlerts(prev => prev.map(alert => ({ ...alert, read: true })))}
-                  className="text-sm text-blue-500 hover:text-blue-700 dark:text-blue-400"
-                >
-                  Marcar todos como lidos
-                </button>
-              </div>
-            </div>
-            
-            {/* Filtros */}
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 mb-6">
-              <h2 className="text-lg font-semibold text-gray-800 dark:text-white mb-4">Filtros</h2>
-              
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                {/* Busca */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Buscar
-                  </label>
-                  <input
-                    type="text"
-                    name="search"
-                    value={filters.search}
-                    onChange={handleFilterChange}
-                    placeholder="Produto ou vendedor"
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
-                  />
-                </div>
-                
-                {/* Tipo de alerta */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Tipo de Alerta
-                  </label>
-                  <select
-                    name="type"
-                    value={filters.type}
-                    onChange={handleFilterChange}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
-                  >
-                    <option value="all">Todos</option>
-                    <option value="price_drop">Queda de Preço</option>
-                    <option value="price_increase">Aumento de Preço</option>
-                    <option value="unauthorized_seller">Vendedor Não Autorizado</option>
-                    <option value="stock_issue">Problema de Estoque</option>
-                  </select>
-                </div>
-                
-                {/* Período */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Período
-                  </label>
-                  <select
-                    name="dateRange"
-                    value={filters.dateRange}
-                    onChange={handleFilterChange}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
-                  >
-                    <option value="all">Todos</option>
-                    <option value="today">Hoje</option>
-                    <option value="week">Última semana</option>
-                    <option value="month">Último mês</option>
-                  </select>
-                </div>
-                
-                {/* Checkbox */}
-                <div className="flex items-center">
-                  <input
-                    type="checkbox"
-                    id="onlyUnread"
-                    name="onlyUnread"
-                    checked={filters.onlyUnread}
-                    onChange={handleFilterChange}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                  />
-                  <label htmlFor="onlyUnread" className="ml-2 block text-sm text-gray-700 dark:text-gray-300">
-                    Apenas não lidos
-                  </label>
-                </div>
-              </div>
-            </div>
-            
-            {/* Lista de alertas */}
+          {/* Botões de Ação */}
+          <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+            <Button
+              variant="outlined"
+              startIcon={<RefreshIcon />}
+              onClick={async () => {
+                try {
+                  setLoading(true);
+                  const token = localStorage.getItem('accessToken') || localStorage.getItem('token');
+                  // Atualiza estatísticas e lista
+                  const [statsRes, listRes] = await Promise.all([
+                    fetch(`${API_URL}/api/alerts/stats`, { headers: { 'Authorization': `Bearer ${token}` } }),
+                    fetch(`${API_URL}/api/alerts`, { headers: { 'Authorization': `Bearer ${token}` } })
+                  ]);
+                  if (statsRes.ok) {
+                    const s = await statsRes.json();
+                    const st = s.stats || {};
+                    setCriticalAlerts(st.critical || 0);
+                    setHighRiskAlerts(st.highRisk || 0);
+                    setPossibleCounterfeit(st.possibleCounterfeit || 0);
+                    setUnreadAlerts(st.unread || 0);
+                  }
+                  if (listRes.ok) {
+                    const d = await listRes.json();
+                    const normalizeRisk = (value) => {
+                      if (!value) return 'MÉDIO';
+                      switch (value.toUpperCase()) {
+                        case 'CRITICAL': return 'CRÍTICO';
+                        case 'HIGH': return 'ALTO';
+                        case 'MEDIUM': return 'MÉDIO';
+                        default: return value;
+                      }
+                    };
+                    const normalized = (d.alerts || []).map(a => ({
+                      ...a,
+                      riskLevel: normalizeRisk(a.riskLevel || a.suspicion_level),
+                      product: {
+                        ...(a.product || {}),
+                        referencePrice: a.product?.referencePrice ?? a.referencePrice ?? a.product?.reference_price ?? 0
+                      },
+                      currentPrice: a.currentPrice ?? a.price ?? 0,
+                      percentChange: typeof a.percentChange === 'number' ? a.percentChange : (a.price_difference_percentage ?? 0),
+                      createdAt: a.createdAt || a.timestamp || new Date().toISOString(),
+                      read: a.read ?? a.isVerified ?? false
+                    }));
+                    setAlerts(normalized);
+                    setFilteredAlerts(normalized);
+                  }
+                } finally {
+                  setLoading(false);
+                }
+              }}
+            >
+              Atualizar
+            </Button>
+            <Button
+              variant="outlined"
+              startIcon={<SettingsIcon />}
+              onClick={() => setShowSettingsModal(true)}
+            >
+              Configurações
+            </Button>
+          <Button variant="contained" color="primary" onClick={() => setOpenReport(true)}>
+            Relatório
+          </Button>
+            <Button variant="outlined" onClick={addSelectedToWatchlist} disabled={filteredAlerts.length === 0}>
+              {selectedIds.length > 0 ? `Adicionar ${selectedIds.length} à Lista de Verificação` : 'Adicionar filtrados à Lista de Verificação'}
+            </Button>
+            <Button variant="outlined" onClick={exportCsv} disabled={filteredAlerts.length === 0}>
+              Exportar CSV
+            </Button>
+            <Button variant="outlined" onClick={printPdf} disabled={filteredAlerts.length === 0}>
+              Exportar PDF
+            </Button>
+          </Box>
+        </Box>
+
+        {/* Estatísticas dos Alertas */}
+        <Grid container spacing={3} sx={{ mb: 4 }}>
+          <Grid item xs={12} sm={6} md={3}>
+            <Card 
+              sx={{ 
+                bgcolor: 'error.light', 
+                color: 'error.contrastText',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease-in-out',
+                '&:hover': {
+                  transform: 'translateY(-2px)',
+                  boxShadow: 3
+                }
+              }}
+              onClick={() => handleFilterByType('critical')}
+            >
+              <CardContent>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                  <Avatar sx={{ bgcolor: 'error.main' }}>
+                    <ErrorIcon />
+                  </Avatar>
+                  <Box>
+                    <Typography variant="h4" fontWeight="bold">
+                      {criticalAlerts}
+                    </Typography>
+                    <Typography variant="body2">
+                      Críticos
+                    </Typography>
+                  </Box>
+                </Box>
+              </CardContent>
+            </Card>
+          </Grid>
+
+          <Grid item xs={12} sm={6} md={3}>
+            <Card 
+              sx={{ 
+                bgcolor: 'warning.light', 
+                color: 'warning.contrastText',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease-in-out',
+                '&:hover': {
+                  transform: 'translateY(-2px)',
+                  boxShadow: 3
+                }
+              }}
+              onClick={() => handleFilterByType('high')}
+            >
+              <CardContent>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                  <Avatar sx={{ bgcolor: 'warning.main' }}>
+                    <WarningIcon />
+                  </Avatar>
+                  <Box>
+                    <Typography variant="h4" fontWeight="bold">
+                      {highRiskAlerts}
+                    </Typography>
+                    <Typography variant="body2">
+                      Alto Risco
+                    </Typography>
+                  </Box>
+                </Box>
+              </CardContent>
+            </Card>
+          </Grid>
+
+          <Grid item xs={12} sm={6} md={3}>
+            <Card 
+              sx={{ 
+                bgcolor: 'info.light', 
+                color: 'info.contrastText',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease-in-out',
+                '&:hover': {
+                  transform: 'translateY(-2px)',
+                  boxShadow: 3
+                }
+              }}
+              onClick={() => handleFilterByType('medium')}
+            >
+              <CardContent>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                  <Avatar sx={{ bgcolor: 'info.main' }}>
+                    <SecurityIcon />
+                  </Avatar>
+                  <Box>
+                    <Typography variant="h4" fontWeight="bold">
+                      {possibleCounterfeit}
+                    </Typography>
+                    <Typography variant="body2">
+                      Possível Falsificação
+                    </Typography>
+                  </Box>
+                </Box>
+              </CardContent>
+            </Card>
+          </Grid>
+
+          <Grid item xs={12} sm={6} md={3}>
+            <Card 
+              sx={{ 
+                bgcolor: 'primary.light', 
+                color: 'primary.contrastText',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease-in-out',
+                '&:hover': {
+                  transform: 'translateY(-2px)',
+                  boxShadow: 3
+                }
+              }}
+              onClick={() => handleFilterByType('unread')}
+            >
+              <CardContent>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                  <Avatar sx={{ bgcolor: 'primary.main' }}>
+                    <BellIcon />
+                  </Avatar>
+                  <Box>
+                    <Typography variant="h4" fontWeight="bold">
+                      {unreadAlerts}
+                    </Typography>
+                    <Typography variant="body2">
+                      Não Lidos
+                    </Typography>
+                  </Box>
+                </Box>
+              </CardContent>
+            </Card>
+          </Grid>
+        </Grid>
+
+        {/* Botão Limpar Filtros */}
+        <Box sx={{ mb: 3, display: 'flex', justifyContent: 'center' }}>
+          <Button 
+            variant="outlined" 
+            onClick={clearFilters}
+            startIcon={<ClearIcon />}
+            sx={{ 
+              borderColor: 'primary.main',
+              color: 'primary.main',
+              '&:hover': {
+                bgcolor: 'primary.light',
+                color: 'primary.dark'
+              }
+            }}
+          >
+            Limpar Filtros
+          </Button>
+        </Box>
+
+        {/* Alertas */}
             {loading ? (
-              <div className="flex items-center justify-center h-64">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-              </div>
-            ) : filteredAlerts.length === 0 ? (
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-8 text-center">
-                <p className="text-gray-600 dark:text-gray-400">Nenhum alerta encontrado com os filtros selecionados.</p>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {filteredAlerts.map((alert) => (
-                  <div 
-                    key={alert.id} 
-                    onClick={() => handleAlertClick(alert)}
-                    className={`bg-white dark:bg-gray-800 rounded-lg shadow p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 ${!alert.read ? 'border-l-4 border-yellow-500' : ''}`}
-                  >
-                    <div className="flex justify-between items-start">
-                      <div className="flex items-start">
-                        {/* Ícone do tipo de alerta */}
-                        <div className={`p-1.5 rounded-full mr-2 flex items-center justify-center w-8 h-8 ${
-                          alert.type === 'price_drop' ? 'bg-green-100 text-green-600 dark:bg-green-900 dark:text-green-300' :
-                          alert.type === 'price_increase' ? 'bg-red-100 text-red-600 dark:bg-red-900 dark:text-red-300' :
-                          alert.type === 'unauthorized_seller' ? 'bg-yellow-100 text-yellow-600 dark:bg-yellow-900 dark:text-yellow-300' :
-                          'bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-300'
-                        }`}>
-                          {alert.type === 'price_drop' && (
-                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"></path>
-                            </svg>
-                          )}
-                          {alert.type === 'price_increase' && (
-                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
-                            </svg>
-                          )}
-                          {alert.type === 'unauthorized_seller' && (
-                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
-                            </svg>
-                          )}
-                          {alert.type === 'stock_issue' && (
-                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path>
-                            </svg>
-                          )}
-                        </div>
-                        
-                        {/* Conteúdo do alerta */}
-                        <div>
-                          <h3 className="text-lg font-medium text-gray-900 dark:text-white">{alert.product}</h3>
-                          <p className="text-sm text-gray-600 dark:text-gray-400">
-                            {alert.type === 'price_drop' && (
-                              <>Queda de preço: <span className="text-green-600 dark:text-green-400">R$ {alert.oldPrice.toFixed(2)} → R$ {alert.newPrice.toFixed(2)}</span></>
-                            )}
-                            {alert.type === 'price_increase' && (
-                              <>Aumento de preço: <span className="text-red-600 dark:text-red-400">R$ {alert.oldPrice.toFixed(2)} → R$ {alert.newPrice.toFixed(2)}</span></>
-                            )}
-                            {alert.type === 'unauthorized_seller' && (
-                              <>Vendedor não autorizado: <span className="font-medium">{alert.seller}</span></>
-                            )}
-                            {alert.type === 'stock_issue' && (
-                              <>{alert.message}</>
-                            )}
-                          </p>
-                          <div className="mt-1 flex items-center">
-                            <span className="text-xs text-gray-500 dark:text-gray-400">{formatRelativeDate(alert.date)}</span>
-                            <span className="mx-2 text-gray-400">•</span>
-                            <span className="text-xs text-gray-500 dark:text-gray-400">{alert.seller}</span>
-                          </div>
-                        </div>
-                      </div>
-                      
-                      {/* Botão de marcar como lido */}
-                      {!alert.read && (
-                        <button
-                          onClick={(e) => handleMarkAsRead(alert.id, e)}
-                          className="text-sm text-blue-500 hover:text-blue-700 dark:text-blue-400"
-                        >
-                          Marcar como lido
-                        </button>
+          <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+            <CircularProgress />
+          </Box>
+        ) : filteredAlerts.length === 0 ? (
+          <Box sx={{ textAlign: 'center', py: 8 }}>
+            <CheckCircleIcon sx={{ fontSize: 64, color: 'success.main', mb: 2 }} />
+            <Typography variant="h6" color="text.secondary" gutterBottom>
+              Nenhum alerta de falsificação detectado
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              O sistema está monitorando continuamente por produtos suspeitos
+            </Typography>
+          </Box>
+        ) : (
+          <Grid container spacing={3}>
+            {filteredAlerts.map((alert) => (
+              <Grid item xs={12} md={6} lg={4} key={alert.id}>
+                <Card 
+                  sx={{ 
+                    height: '100%',
+                    border: alert.riskLevel === 'CRÍTICO' ? '2px solid' : '1px solid',
+                    borderColor: alert.riskLevel === 'CRÍTICO' ? 'error.main' : 'divider',
+                    '&:hover': {
+                      boxShadow: 6,
+                      transform: 'translateY(-2px)',
+                      transition: 'all 0.3s ease'
+                    }
+                  }}
+                >
+                  <CardContent>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+                      <Checkbox size="small" checked={selectedIds.includes(alert.id)} onChange={() => toggleSelect(alert.id)} />
+                      {getAlertIcon(alert.type)}
+                      <Box sx={{ flexGrow: 1 }}>
+                        <Typography variant="h6" fontWeight="bold">
+                          {alert.product.name}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          PN: {alert.product.pn}
+                        </Typography>
+                      </Box>
+                      <Chip
+                        label={alert.riskLevel}
+                        color={getRiskColor(alert.riskLevel)}
+                        size="small"
+                        variant="filled"
+                      />
+                      {/* Badge de anúncio removido */}
+                      {!alert.productUrl && (
+                        <Chip label="Sem URL" color="default" size="small" sx={{ ml: 1 }} />
                       )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </main>
-      </div>
-    </div>
+                    </Box>
+
+                    <Alert severity={alert.riskLevel === 'CRÍTICO' ? 'error' : 'warning'} sx={{ mb: 2 }}>
+                      {alert.description}
+                    </Alert>
+
+                    <List dense>
+                      <ListItem>
+                        <ListItemIcon>
+                          <AttachMoneyIcon color="primary" />
+                        </ListItemIcon>
+                        <ListItemText
+                          primary="Preço Atual"
+                          secondary={`R$ ${alert.currentPrice.toFixed(2)}`}
+                        />
+                      </ListItem>
+                      <ListItem>
+                        <ListItemIcon>
+                          <AttachMoneyIcon color="success" />
+                        </ListItemIcon>
+                        <ListItemText
+                          primary="Preço de Referência"
+                          secondary={`R$ ${alert.product.referencePrice.toFixed(2)}`}
+                        />
+                      </ListItem>
+                      <ListItem>
+                        <ListItemIcon>
+                          <TrendingDownIcon color="error" />
+                        </ListItemIcon>
+                        <ListItemText
+                          primary="Variação"
+                          secondary={`${alert.percentChange}%`}
+                        />
+                      </ListItem>
+                      <ListItem>
+                        <ListItemIcon>
+                          <StoreIcon color="info" />
+                        </ListItemIcon>
+                        <ListItemText
+                          primary="Vendedor"
+                          secondary={alert.seller}
+                        />
+                      </ListItem>
+                      <ListItem>
+                        <ListItemIcon>
+                          <StarIcon color="warning" />
+                        </ListItemIcon>
+                        <ListItemText
+                          primary="Avaliação"
+                          secondary={`${alert.sellerRating}/5.0`}
+                        />
+                      </ListItem>
+                    </List>
+
+                    <Divider sx={{ my: 2 }} />
+
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <Typography variant="caption" color="text.secondary">
+                        {formatTime(alert.createdAt)}
+                      </Typography>
+                      {!alert.read && (
+                        <Chip
+                          label="Novo"
+                          size="small"
+                          color="primary"
+                          variant="outlined"
+                        />
+                      )}
+                    </Box>
+                  </CardContent>
+
+                  <CardActions sx={{ justifyContent: 'space-between', px: 2, pb: 2, flexWrap: 'wrap', gap: 1 }}>
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      onClick={async () => {
+                        try {
+                          const token = localStorage.getItem('accessToken') || localStorage.getItem('token');
+                          if (alert.productUrl) {
+                            // Validar no backend se a URL ainda está ativa
+                            const res = await fetch(`${API_URL}/api/alerts/${alert.id}/validate-url`, { headers: { 'Authorization': `Bearer ${token}` }});
+                            if (res.ok) {
+                              const d = await res.json();
+                              if (d.available && d.url) {
+                                window.open(d.url, '_blank', 'noopener');
+                              } else {
+                                const msg = d.status_ml ? `Anúncio ${d.status_ml}` : (d.status ? `Status ${d.status}` : 'Indisponível');
+                                alert(`${msg}. Abrirei a pesquisa por nome + PN.`);
+                                window.open(`https://www.mercadolivre.com.br/jm/search?as_word=${encodeURIComponent((alert.product?.name||'') + ' ' + (alert.product?.pn||''))}`, '_blank', 'noopener');
+                              }
+                            } else {
+                              window.open(alert.productUrl, '_blank', 'noopener');
+                            }
+                          } else {
+                            // Sem URL salva → abrir busca específica
+                            window.open(`https://www.mercadolivre.com.br/jm/search?as_word=${encodeURIComponent((alert.product?.name||'') + ' ' + (alert.product?.pn||''))}`, '_blank', 'noopener');
+                          }
+                        } catch (e) {
+                          console.error('Erro ao validar URL do anúncio', e);
+                          window.open(alert.productUrl || `https://www.mercadolivre.com.br/jm/search?as_word=${encodeURIComponent((alert.product?.name||'') + ' ' + (alert.product?.pn||''))}`, '_blank', 'noopener');
+                        }
+                      }}
+                    >
+                      Ver anúncio
+                    </Button>
+                    <Button
+                      size="small"
+                      color="primary"
+                      onClick={() => handleMarkAsRead(alert.id)}
+                    >
+                      {alert.read ? 'Marcar como não lido' : 'Marcar como lido'}
+                    </Button>
+                    <Button
+                      size="small"
+                      color="error"
+                      onClick={() => handleDeleteAlert(alert.id)}
+                    >
+                      Excluir
+                    </Button>
+                  </CardActions>
+                </Card>
+              </Grid>
+            ))}
+          </Grid>
+        )}
+      </Container>
+
+      {showSettingsModal && (
+        <AlertSettingsModal 
+          onClose={() => setShowSettingsModal(false)}
+          onSave={(values) => {
+            console.log('Configurações de alertas salvas:', values);
+            setShowSettingsModal(false);
+          }}
+        />
+      )}
+
+      <Dialog open={openReport} onClose={() => setOpenReport(false)} maxWidth="md" fullWidth>
+        <DialogTitle>Relatório de Produtos Suspeitos</DialogTitle>
+        <DialogContent>
+          <Paper elevation={0} sx={{ p: 2, bgcolor: 'background.default' }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+              <Box>
+                <Typography variant="h6" fontWeight="bold">Resumo</Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Período: últimos 30 dias • Total: {filteredAlerts.length}
+                </Typography>
+              </Box>
+              <Box>
+                <Chip label={`Críticos: ${criticalAlerts}`} color="error" sx={{ mr: 1 }} />
+                <Chip label={`Alto Risco: ${highRiskAlerts}`} color="warning" sx={{ mr: 1 }} />
+                <Chip label={`Possível Falsificação: ${possibleCounterfeit}`} color="info" sx={{ mr: 1 }} />
+                <Chip label={`Não Lidos: ${unreadAlerts}`} color="primary" />
+              </Box>
+            </Box>
+            <Divider sx={{ mb: 2 }} />
+            <Grid container spacing={2}>
+              {(selectedIds.length ? alerts.filter(a => selectedIds.includes(a.id)) : filteredAlerts).map((a) => (
+                <Grid item xs={12} key={a.id}>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', p: 1.5, borderRadius: 1, border: '1px solid', borderColor: 'divider' }}>
+                    <Box>
+                      <Typography variant="subtitle1" fontWeight="bold">{a.product?.name}</Typography>
+                      <Typography variant="caption" color="text.secondary">PN: {a.product?.pn} • {a.riskLevel}</Typography>
+                    </Box>
+                    <Box sx={{ display: 'flex', gap: 3 }}>
+                      <Typography variant="body2">Preço Atual: R$ {a.currentPrice?.toFixed(2)}</Typography>
+                      <Typography variant="body2">Ref.: R$ {a.product?.referencePrice?.toFixed(2)}</Typography>
+                      <Typography variant="body2">Variação: {a.percentChange}%</Typography>
+                      <Button size="small" href={a.productUrl || `https://www.mercadolivre.com.br/jm/search?as_word=${encodeURIComponent((a.product?.name||'') + ' ' + (a.product?.pn||''))}`} target="_blank">Abrir</Button>
+                    </Box>
+                  </Box>
+                </Grid>
+              ))}
+            </Grid>
+          </Paper>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpenReport(false)}>Fechar</Button>
+          <Button variant="outlined" onClick={exportCsv}>Exportar CSV</Button>
+          <Button variant="contained" onClick={printPdf}>Imprimir/Salvar PDF</Button>
+        </DialogActions>
+      </Dialog>
+    </Box>
   );
 };
 

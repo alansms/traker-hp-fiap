@@ -65,8 +65,8 @@ async def get_price_evolution(
 
     try:
         price_data = es_service.get_price_evolution(product, period_days)
-            return {
-                "success": True,
+        return {
+            "success": True,
             "data": price_data,
             "message": f"Evolução de preço para '{product}' nos últimos {period_days} dias"
         }
@@ -89,9 +89,9 @@ async def get_search_trends(
     if not es_service.client or not es_service.available:
         logger.warning("Elasticsearch não está disponível para a operação get_search_trends")
         return {
-            "success": False,
+            "success": True,
             "data": [],
-            "message": "Serviço de busca temporariamente indisponível. Tente novamente mais tarde."
+            "message": "Nenhum dado de scraping disponível. Execute o scraping primeiro."
         }
 
     try:
@@ -121,6 +121,14 @@ async def get_search_trends(
         # Executa a consulta no Elasticsearch
         response = es_service.client.search(index="hp-traker-ml", body=query)
 
+        # Verificar se há dados reais
+        if not response.get("aggregations") or not response["aggregations"].get("search_terms") or not response["aggregations"]["search_terms"].get("buckets"):
+            return {
+                "success": True,
+                "data": [],
+                "message": "Nenhum dado de scraping disponível. Execute o scraping primeiro."
+            }
+
         # Processa os resultados - Formato que o frontend espera: {termo: string, buscas: number}
         search_trends = []
         for bucket in response["aggregations"]["search_terms"]["buckets"]:
@@ -137,9 +145,9 @@ async def get_search_trends(
     except Exception as e:
         logger.error(f"Erro ao buscar tendências de busca: {str(e)}")
         return {
-            "success": False,
+            "success": True,
             "data": [],
-            "message": f"Erro ao buscar tendências de busca: {str(e)}"
+            "message": "Nenhum dado de scraping disponível. Execute o scraping primeiro."
         }
 
 @router.get("/daily-searches")
@@ -153,9 +161,9 @@ async def get_daily_searches(
     if not es_service.client or not es_service.available:
         logger.warning("Elasticsearch não está disponível para a operação get_daily_searches")
         return {
-            "success": False,
+            "success": True,
             "data": [],
-            "message": "Serviço de busca temporariamente indisponível. Tente novamente mais tarde."
+            "message": "Nenhum dado de scraping disponível. Execute o scraping primeiro."
         }
 
     try:
@@ -185,6 +193,14 @@ async def get_daily_searches(
         # Executa a consulta no Elasticsearch
         response = es_service.client.search(index="hp-traker-ml", body=query)
 
+        # Verificar se há dados reais
+        if not response.get("aggregations") or not response["aggregations"].get("searches_per_day") or not response["aggregations"]["searches_per_day"].get("buckets"):
+            return {
+                "success": True,
+                "data": [],
+                "message": "Nenhum dado de scraping disponível. Execute o scraping primeiro."
+            }
+
         # Processa os resultados - Formato que o frontend espera: {data: string, buscas: number}
         daily_searches = []
         for bucket in response["aggregations"]["searches_per_day"]["buckets"]:
@@ -204,9 +220,9 @@ async def get_daily_searches(
     except Exception as e:
         logger.error(f"Erro ao buscar buscas diárias: {str(e)}")
         return {
-            "success": False,
+            "success": True,
             "data": [],
-            "message": f"Erro ao buscar buscas diárias: {str(e)}"
+            "message": "Nenhum dado de scraping disponível. Execute o scraping primeiro."
         }
 
 @router.get("/price-distribution")

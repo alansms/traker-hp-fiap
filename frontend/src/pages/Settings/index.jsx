@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Container,
@@ -10,11 +10,15 @@ import {
   Button
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import ApiSettings from './ApiSettings';
-import ApiKeySettings from './ApiKeySettings';
+import UnifiedApiSettings from './UnifiedApiSettings';
 import UserApproval from './UserApproval';
 import SystemSettings from './SystemSettings';
 import NotificationSettings from './NotificationSettings';
+import UsersManagement from '../Users';
+import SystemLogs from './SystemLogs';
+import SuspiciousConfig from './SuspiciousConfig';
+import DataCleanup from './DataCleanup';
+import ScrapingControl from './ScrapingControl';
 import { useAuth } from '../../hooks/useAuth';
 
 function TabPanel(props) {
@@ -137,27 +141,21 @@ const Settings = () => {
             variant="scrollable"
             scrollButtons="auto"
           >
-            <Tab label="API" {...a11yProps(0)} />
-            <Tab label="Chaves de API" {...a11yProps(1)} />
-            <Tab label="Aprovação de Usuários" {...a11yProps(2)} />
-            <Tab label="Sistema" {...a11yProps(3)} />
-            <Tab label="Notificações" {...a11yProps(4)} />
+            <Tab label="Chaves de API" {...a11yProps(0)} />
+            <Tab label="Aprovação de Usuários" {...a11yProps(1)} />
+            <Tab label="Gerenciar Usuários" {...a11yProps(2)} />
+            <Tab label="Logs do Sistema" {...a11yProps(3)} />
+            <Tab label="Detecção de Suspeitos" {...a11yProps(4)} />
+            <Tab label="Limpeza de Dados" {...a11yProps(5)} />
+            <Tab label="Controle de Scraping" {...a11yProps(6)} />
+            <Tab label="Configurações" {...a11yProps(7)} />
+            <Tab label="Notificações" {...a11yProps(8)} />
           </Tabs>
         </Box>
 
         <TabPanel value={tabValue} index={0}>
           {isAuthorized ? (
-            <ApiSettings />
-          ) : (
-            <Typography variant="body1" color="text.secondary" sx={{ py: 3 }}>
-              Configurações da API estão disponíveis apenas para administradores do sistema.
-            </Typography>
-          )}
-        </TabPanel>
-
-        <TabPanel value={tabValue} index={1}>
-          {isAuthorized ? (
-            <ApiKeySettings />
+            <UnifiedApiSettings />
           ) : (
             <Typography variant="body1" color="text.secondary" sx={{ py: 3 }}>
               Configurações de Chaves de API estão disponíveis apenas para administradores do sistema.
@@ -165,7 +163,7 @@ const Settings = () => {
           )}
         </TabPanel>
 
-        <TabPanel value={tabValue} index={2}>
+        <TabPanel value={tabValue} index={1}>
           {isAuthorized ? (
             <UserApproval />
           ) : (
@@ -175,7 +173,57 @@ const Settings = () => {
           )}
         </TabPanel>
 
+        <TabPanel value={tabValue} index={2}>
+          {isAuthorized ? (
+            <UsersManagement />
+          ) : (
+            <Typography variant="body1" color="text.secondary" sx={{ py: 3 }}>
+              Gerenciamento de Usuários está disponível apenas para administradores do sistema.
+            </Typography>
+          )}
+        </TabPanel>
+
         <TabPanel value={tabValue} index={3}>
+          {isAuthorized ? (
+            <SystemLogs />
+          ) : (
+            <Typography variant="body1" color="text.secondary" sx={{ py: 3 }}>
+              Logs do Sistema estão disponíveis apenas para administradores do sistema.
+            </Typography>
+          )}
+        </TabPanel>
+
+        <TabPanel value={tabValue} index={4}>
+          {isAuthorized ? (
+            <SuspiciousConfig />
+          ) : (
+            <Typography variant="body1" color="text.secondary" sx={{ py: 3 }}>
+              Configurações de Detecção de Suspeitos estão disponíveis apenas para administradores do sistema.
+            </Typography>
+          )}
+        </TabPanel>
+
+        <TabPanel value={tabValue} index={5}>
+          {isAuthorized ? (
+            <DataCleanup />
+          ) : (
+            <Typography variant="body1" color="text.secondary" sx={{ py: 3 }}>
+              Limpeza de Dados está disponível apenas para administradores do sistema.
+            </Typography>
+          )}
+        </TabPanel>
+
+        <TabPanel value={tabValue} index={6}>
+          {isAuthorized ? (
+            <ScrapingControl />
+          ) : (
+            <Typography variant="body1" color="text.secondary" sx={{ py: 3 }}>
+              Controle de Scraping está disponível apenas para administradores do sistema.
+            </Typography>
+          )}
+        </TabPanel>
+
+        <TabPanel value={tabValue} index={7}>
           {isAuthorized ? (
             <SystemSettings />
           ) : (
@@ -185,7 +233,7 @@ const Settings = () => {
           )}
         </TabPanel>
 
-        <TabPanel value={tabValue} index={4}>
+        <TabPanel value={tabValue} index={8}>
           {isAuthorized ? (
             <NotificationSettings />
           ) : (

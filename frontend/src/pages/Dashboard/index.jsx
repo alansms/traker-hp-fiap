@@ -79,33 +79,67 @@ const Dashboard = () => {
 
     try {
       // Mostrar carregamento
-      setLoading(true);
+      setLoading({
+        topProducts: true,
+        searchTrends: true,
+        dailySearches: true,
+        priceDistribution: true,
+        topRatedProducts: true
+      });
 
       // Carregar top produtos
       const topProductsData = await dashboardService.getTopProducts(productCount, periodDays);
-      setTopProducts(topProductsData.data || []);
+      if (topProductsData.success && topProductsData.data) {
+        setTopProducts(topProductsData.data);
+      } else {
+        setTopProducts([]);
+      }
 
       // Carregar tendências de busca
       const searchTrendsData = await dashboardService.getSearchTrends(periodDays);
-      setSearchTrends(searchTrendsData.data || []);
+      if (searchTrendsData.success && searchTrendsData.data) {
+        setSearchTrends(searchTrendsData.data);
+      } else {
+        setSearchTrends([]);
+      }
 
       // Carregar buscas diárias
       const dailySearchesData = await dashboardService.getDailySearches(periodDays);
-      setDailySearches(dailySearchesData.data || []);
+      if (dailySearchesData.success && dailySearchesData.data) {
+        setDailySearches(dailySearchesData.data);
+      } else {
+        setDailySearches([]);
+      }
 
       // Carregar distribuição de preços
       const priceDistributionData = await dashboardService.getPriceDistribution(periodDays);
-      setPriceDistribution(priceDistributionData.data || []);
+      console.log('Dados de distribuição de preços:', priceDistributionData);
+      if (priceDistributionData.success && priceDistributionData.data) {
+        setPriceDistribution(priceDistributionData.data);
+      } else {
+        setPriceDistribution([]);
+      }
 
       // Carregar produtos melhor avaliados
       const topRatedProductsData = await dashboardService.getTopRatedProducts(productCount, periodDays);
-      setTopRatedProducts(topRatedProductsData.data || []);
+      console.log('Dados de produtos melhor avaliados:', topRatedProductsData);
+      if (topRatedProductsData.success && topRatedProductsData.data) {
+        setTopRatedProducts(topRatedProductsData.data);
+      } else {
+        setTopRatedProducts([]);
+      }
 
     } catch (error) {
       console.error('Erro ao carregar dados do dashboard:', error);
       setError('Ocorreu um erro ao carregar os dados. Por favor, tente novamente.');
     } finally {
-      setLoading(false);
+      setLoading({
+        topProducts: false,
+        searchTrends: false,
+        dailySearches: false,
+        priceDistribution: false,
+        topRatedProducts: false
+      });
     }
   }, [productCount, periodDays]);
 
@@ -218,9 +252,14 @@ const Dashboard = () => {
                   </BarChart>
                 </ResponsiveContainer>
               ) : (
-                <Typography variant="body1" color="textSecondary" align="center">
-                  Nenhum dado disponível
-                </Typography>
+                <Box textAlign="center" py={4}>
+                  <Typography variant="body1" color="textSecondary" gutterBottom>
+                    Nenhum dado disponível no banco de dados
+                  </Typography>
+                  <Typography variant="body2" color="textSecondary">
+                    Os dados serão carregados automaticamente quando disponíveis
+                  </Typography>
+                </Box>
               )}
             </Paper>
           </Grid>
@@ -260,9 +299,14 @@ const Dashboard = () => {
                   </PieChart>
                 </ResponsiveContainer>
               ) : (
-                <Typography variant="body1" color="textSecondary" align="center">
-                  Nenhum dado disponível
-                </Typography>
+                <Box textAlign="center" py={4}>
+                  <Typography variant="body1" color="textSecondary" gutterBottom>
+                    Nenhum dado disponível no banco de dados
+                  </Typography>
+                  <Typography variant="body2" color="textSecondary">
+                    Os dados serão carregados automaticamente quando disponíveis
+                  </Typography>
+                </Box>
               )}
             </Paper>
           </Grid>
@@ -306,9 +350,14 @@ const Dashboard = () => {
                   </AreaChart>
                 </ResponsiveContainer>
               ) : (
-                <Typography variant="body1" color="textSecondary" align="center">
-                  Nenhum dado disponível
-                </Typography>
+                <Box textAlign="center" py={4}>
+                  <Typography variant="body1" color="textSecondary" gutterBottom>
+                    Nenhum dado disponível no banco de dados
+                  </Typography>
+                  <Typography variant="body2" color="textSecondary">
+                    Os dados serão carregados automaticamente quando disponíveis
+                  </Typography>
+                </Box>
               )}
             </Paper>
           </Grid>
@@ -347,9 +396,14 @@ const Dashboard = () => {
                   </BarChart>
                 </ResponsiveContainer>
               ) : (
-                <Typography variant="body1" color="textSecondary" align="center">
-                  Nenhum dado disponível
-                </Typography>
+                <Box textAlign="center" py={4}>
+                  <Typography variant="body1" color="textSecondary" gutterBottom>
+                    Nenhum dado disponível no banco de dados
+                  </Typography>
+                  <Typography variant="body2" color="textSecondary">
+                    Os dados serão carregados automaticamente quando disponíveis
+                  </Typography>
+                </Box>
               )}
             </Paper>
           </Grid>
@@ -402,9 +456,14 @@ const Dashboard = () => {
                   ))}
                 </Box>
               ) : (
-                <Typography variant="body1" color="textSecondary" align="center">
-                  Nenhum dado disponível
-                </Typography>
+                <Box textAlign="center" py={4}>
+                  <Typography variant="body1" color="textSecondary" gutterBottom>
+                    Nenhum dado disponível no banco de dados
+                  </Typography>
+                  <Typography variant="body2" color="textSecondary">
+                    Os dados serão carregados automaticamente quando disponíveis
+                  </Typography>
+                </Box>
               )}
             </Paper>
           </Grid>

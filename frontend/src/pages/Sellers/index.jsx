@@ -45,7 +45,7 @@ const Sellers = () => {
   const [sellers, setSellers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [rowsPerPage, setRowsPerPage] = useState(20);
   const [searchTerm, setSearchTerm] = useState('');
   const [showHPPartners, setShowHPPartners] = useState(false);
 
@@ -444,49 +444,52 @@ const Sellers = () => {
 
   // Renderização do componente
   return (
-    <Container maxWidth="lg">
-      <Box sx={{ mt: 4, mb: 2 }}>
-        <Grid container justifyContent="space-between" alignItems="center">
-          <Grid item>
-            <Typography variant="h4" component="h1" gutterBottom>
+    <Box sx={{ py: 3 }}>
+      <Container maxWidth="xl">
+        {/* Cabeçalho da Página */}
+        <Box sx={{ mb: 4, display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, justifyContent: 'space-between', alignItems: { xs: 'flex-start', sm: 'center' }, gap: 2 }}>
+          <Box>
+            <Typography variant="h4" component="h1" gutterBottom fontWeight="bold">
               Vendedores
             </Typography>
-          </Grid>
-          <Grid item>
-            <Box sx={{ display: 'flex', gap: 2 }}>
-              <Button
-                variant="contained"
-                color="primary"
-                startIcon={<AddIcon />}
-                onClick={handleOpenAddDialog}
-              >
-                Novo Vendedor
-              </Button>
-              <Button
-                variant="outlined"
-                color="primary"
-                startIcon={<FileUploadIcon />}
-                onClick={handleOpenImportDialog}
-              >
-                Importar
-              </Button>
-              <Button
-                variant="outlined"
-                color="secondary"
-                startIcon={<FileDownloadIcon />}
-                onClick={handleExportTemplate}
-              >
-                Baixar Modelo
-              </Button>
-            </Box>
-          </Grid>
-        </Grid>
-      </Box>
+            <Typography variant="body1" color="text.secondary">
+              Gerencie os vendedores autorizados e revendedores HP+
+            </Typography>
+          </Box>
 
-      {/* Filtros */}
-      <Paper sx={{ p: 2, mb: 4 }}>
-        <Grid container spacing={2} alignItems="center">
-          <Grid item xs={12} sm={6} md={8}>
+          {/* Botões de Ação */}
+          <Box sx={{ display: 'flex', gap: 2 }}>
+            <Button
+              variant="contained"
+              color="primary"
+              startIcon={<AddIcon />}
+              onClick={handleOpenAddDialog}
+            >
+              Novo Vendedor
+            </Button>
+            <Button
+              variant="outlined"
+              color="primary"
+              startIcon={<FileUploadIcon />}
+              onClick={handleOpenImportDialog}
+            >
+              Importar
+            </Button>
+            <Button
+              variant="outlined"
+              color="secondary"
+              startIcon={<FileDownloadIcon />}
+              onClick={handleExportTemplate}
+            >
+              Baixar Modelo
+            </Button>
+          </Box>
+        </Box>
+
+        {/* Painel de Filtros e Busca */}
+        <Paper elevation={2} sx={{ p: 3, mb: 3, borderRadius: 2 }}>
+          <Grid container spacing={3} alignItems="center">
+          <Grid item xs={12} md={5}>
             <TextField
               fullWidth
               variant="outlined"
@@ -502,40 +505,48 @@ const Sellers = () => {
               }}
             />
           </Grid>
-          <Grid item xs={12} sm={6} md={4}>
+          <Grid item xs={12} md={3}>
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <FormControlLabel
                 control={
                   <Switch
                     checked={showHPPartners}
                     onChange={(e) => setShowHPPartners(e.target.checked)}
+                    color="primary"
                   />
                 }
                 label="Apenas Revendedores HP+"
               />
-
-              {/* Botão de exclusão em massa - visível apenas quando há itens selecionados */}
-              {sellers.filter(s => s.selected).length > 0 && (
-                <Tooltip title={`Excluir ${sellers.filter(s => s.selected).length} itens selecionados`}>
-                  <Button
-                    variant="contained"
-                    color="error"
-                    startIcon={<DeleteSweepIcon />}
-                    onClick={handleOpenBulkDeleteDialog}
-                    size="small"
-                  >
-                    Excluir ({sellers.filter(s => s.selected).length})
-                  </Button>
-                </Tooltip>
-              )}
             </Box>
           </Grid>
         </Grid>
       </Paper>
 
-      {/* Tabela de Vendedores */}
-      <Paper sx={{ width: '100%', overflow: 'hidden' }}>
-        <TableContainer sx={{ maxHeight: 440 }}>
+      {/* Resultados e Tabela */}
+      <Paper elevation={3} sx={{ borderRadius: 2, overflow: 'hidden' }}>
+        {/* Status da busca */}
+        <Box sx={{ px: 3, py: 2, borderBottom: 1, borderColor: 'divider', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Typography variant="body2" color="text.secondary">
+            Exibindo {Math.min((page + 1) * rowsPerPage, filteredSellers.length)} de {filteredSellers.length} vendedores
+            {searchTerm && ` (filtrado por "${searchTerm}")`}
+            {showHPPartners && ` (apenas HP+ Revendedores)`}
+          </Typography>
+
+          {/* Botão de exclusão em massa - visível apenas quando há itens selecionados */}
+          {sellers.filter(s => s.selected).length > 0 && (
+            <Button
+              variant="outlined"
+              color="error"
+              size="small"
+              startIcon={<DeleteSweepIcon />}
+              onClick={handleOpenBulkDeleteDialog}
+            >
+              Excluir {sellers.filter(s => s.selected).length} {sellers.filter(s => s.selected).length === 1 ? 'vendedor' : 'vendedores'}
+            </Button>
+          )}
+        </Box>
+
+        <TableContainer>
           <Table stickyHeader aria-label="tabela de vendedores">
             <TableHead>
               <TableRow>
@@ -633,14 +644,14 @@ const Sellers = () => {
           </Table>
         </TableContainer>
         <TablePagination
-          rowsPerPageOptions={[5, 10, 25]}
+          rowsPerPageOptions={[10, 20, 50]}
           component="div"
           count={filteredSellers.length}
           rowsPerPage={rowsPerPage}
           page={page}
           onPageChange={handleChangePage}
           onRowsPerPageChange={handleChangeRowsPerPage}
-          labelRowsPerPage="Itens por página"
+          labelRowsPerPage="Vendedores por página:"
           labelDisplayedRows={({ from, to, count }) => `${from}-${to} de ${count}`}
         />
       </Paper>
@@ -824,7 +835,8 @@ const Sellers = () => {
           {notification.message}
         </Alert>
       </Snackbar>
-    </Container>
+      </Container>
+    </Box>
   );
 };
 

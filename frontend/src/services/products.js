@@ -33,6 +33,11 @@ export const createBulkProducts = async (productsData) => {
   return await post('/api/products/bulk/', productsData);
 };
 
+// Bulk update status (activate/deactivate)
+export const bulkUpdateStatus = async (ids, isActive) => {
+  return await put('/api/products/bulk/status', { ids, is_active: isActive });
+};
+
 // Upload Excel file for bulk import
 export const uploadProductsExcel = async (file) => {
   // Importar o método uploadFile do módulo api

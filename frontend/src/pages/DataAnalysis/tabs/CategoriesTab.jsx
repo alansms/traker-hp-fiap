@@ -39,10 +39,10 @@ const CategoriesTab = ({ analysisData }) => {
             >
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis type="number" />
-              <YAxis dataKey="name" type="category" width={100} />
+              <YAxis dataKey="category" type="category" width={100} />
               <Tooltip formatter={(value) => `${value} produtos`} />
               <Legend />
-              <Bar dataKey="value" fill="#8884d8" name="Quantidade" />
+              <Bar dataKey="count" fill="#8884d8" name="Quantidade" />
             </BarChart>
           </ResponsiveContainer>
         </Paper>
@@ -61,8 +61,8 @@ const CategoriesTab = ({ analysisData }) => {
                 labelLine={true}
                 outerRadius={120}
                 fill="#8884d8"
-                dataKey="value"
-                nameKey="name"
+                dataKey="count"
+                nameKey="category"
                 label={({name, percent}) => `${name} ${(percent * 100).toFixed(0)}%`}
               >
                 {analysisData.categoryDistribution.map((entry, index) => (
@@ -111,8 +111,8 @@ const CategoriesTab = ({ analysisData }) => {
                 labelLine={true}
                 outerRadius={100}
                 fill="#8884d8"
-                dataKey="value"
-                nameKey="name"
+                dataKey="count"
+                nameKey="category"
                 label={({name, percent}) => `${name} ${(percent * 100).toFixed(0)}%`}
               >
                 <Cell fill="#0088FE" />

@@ -9,7 +9,7 @@ const sentimentAnalysisService = {
    */
   analyzeSellerReputation: async (sellerId = null, periodDays = 30) => {
     try {
-      let url = `/api/dashboard/seller-analysis?period_days=${periodDays}`;
+      let url = `/api/dashboard-postgres/seller-analysis?period_days=${periodDays}`;
       if (sellerId) {
         url += `&seller_id=${encodeURIComponent(sellerId)}`;
       }
@@ -30,7 +30,7 @@ const sentimentAnalysisService = {
    */
   analyzeComments: async (periodDays = 30, productFilter = null) => {
     try {
-      let url = `/api/dashboard/comment-analysis?period_days=${periodDays}`;
+      let url = `/api/dashboard-postgres/comment-analysis?period_days=${periodDays}`;
       if (productFilter) {
         url += `&product_filter=${encodeURIComponent(productFilter)}`;
       }
@@ -51,7 +51,7 @@ const sentimentAnalysisService = {
    */
   generateRiskReport: async (periodDays = 30, threshold = 3.0) => {
     try {
-      const url = `/api/dashboard/risk-report?period_days=${periodDays}&threshold=${threshold}`;
+      const url = `/api/dashboard-postgres/risk-report?period_days=${periodDays}&threshold=${threshold}`;
 
       const response = await api.get(url);
       return response;

@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 import { useTheme, useMediaQuery, alpha } from '@mui/material';
@@ -50,7 +50,8 @@ import AddIcon from '@mui/icons-material/Add';
 import WarningIcon from '@mui/icons-material/Warning';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
-import { getAllProducts, createProduct, createBulkProducts, mapFromApiModel } from '../../services/products';
+import CloseIcon from '@mui/icons-material/Close';
+import { getAllProducts, createProduct, createBulkProducts, deleteProduct, mapFromApiModel, bulkUpdateStatus } from '../../services/products';
 import { createExampleExcelFile, parseExcelFile } from '../../utils/excel';
 
 const Products = () => {
@@ -59,7 +60,7 @@ const Products = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [rowsPerPage, setRowsPerPage] = useState(20);
   const [orderBy, setOrderBy] = useState('name');
   const [order, setOrder] = useState('asc');
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
@@ -68,6 +69,13 @@ const Products = () => {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+
+  // Debug: Log quando snackbar muda
+  useEffect(() => {
+    if (snackbar.open) {
+      console.log('Snackbar aberto:', snackbar);
+    }
+  }, [snackbar]);
   const [selectedProducts, setSelectedProducts] = useState([]);
   const [openBulkDeleteDialog, setOpenBulkDeleteDialog] = useState(false);
   const [deletedProductIds, setDeletedProductIds] = useState(() => {
@@ -250,17 +258,12 @@ const Products = () => {
 
     try {
       setLoading(true);
-      // Lógica para excluir o produto
-      // Implementação futura: Chamar API para excluir o produto
-      console.log(`Excluindo produto ${productToDelete.id}`);
+      
+      // Chamar API para excluir o produto
+      await deleteProduct(productToDelete.id);
 
-      // Atualizar a lista após exclusão
-      setProducts(products.filter(p => p.id !== productToDelete.id));
-
-      // Adicionar à lista de produtos excluídos
-      const newDeletedIds = [...deletedProductIds, productToDelete.id];
-      setDeletedProductIds(newDeletedIds);
-      localStorage.setItem('deletedProductIds', JSON.stringify(newDeletedIds));
+      // Recarregar a lista de produtos do backend
+      await fetchProducts();
 
       setSnackbar({
         open: true,
@@ -300,17 +303,13 @@ const Products = () => {
   const handleBulkDeleteConfirm = async () => {
     try {
       setLoading(true);
-      // Lógica para excluir os produtos selecionados
-      // Implementação futura: Chamar API para excluir produtos em lote
-      console.log(`Excluindo ${selectedProducts.length} produtos`);
+      
+      // Excluir cada produto selecionado
+      const deletePromises = selectedProducts.map(productId => deleteProduct(productId));
+      await Promise.all(deletePromises);
 
-      // Atualizar a lista após exclusão
-      setProducts(products.filter(p => !selectedProducts.includes(p.id)));
-
-      // Adicionar à lista de produtos excluídos
-      const newDeletedIds = [...deletedProductIds, ...selectedProducts];
-      setDeletedProductIds(newDeletedIds);
-      localStorage.setItem('deletedProductIds', JSON.stringify(newDeletedIds));
+      // Recarregar a lista de produtos do backend
+      await fetchProducts();
 
       setSnackbar({
         open: true,
@@ -388,16 +387,19 @@ const Products = () => {
       // Salvar os produtos em lote
       const savedProducts = await createBulkProducts(formattedProducts);
 
-      // Atualizar a lista de produtos
-      setProducts([...savedProducts, ...products]);
+      // Mapear os produtos salvos para o formato da interface
+      const mappedProducts = savedProducts.map(apiProduct => mapFromApiModel(apiProduct));
+
+      // Recarregar a lista completa de produtos do backend
+      await fetchProducts();
 
       setSnackbar({
         open: true,
-        message: `${savedProducts.length} produtos importados com sucesso.`,
+        message: `${mappedProducts.length} produtos importados com sucesso.`,
         severity: 'success'
       });
 
-      return savedProducts;
+      return mappedProducts;
     } catch (error) {
       console.error('Erro ao salvar produtos em lote:', error);
       throw error;
@@ -538,7 +540,6 @@ const Products = () => {
 
   const handleSyncWithDatabase = async () => {
     setLoading(true);
-    setSnackbar({ open: true, message: 'Sincronizando produtos com o banco de dados...', severity: 'info' });
 
     try {
       // Obter os produtos que vamos sincronizar
@@ -742,17 +743,59 @@ const Products = () => {
                   {selectedCategory !== 'all' && ` na categoria "${categories.find(c => c.value === selectedCategory)?.label}"`}
                 </Typography>
 
-                {/* Botão de exclusão em massa */}
+                {/* Ações em massa */}
                 {selectedProducts.length > 0 && user && (user.role === 'admin' || user.role === 'analyst') && (
-                  <Button
-                    variant="outlined"
-                    color="error"
-                    size="small"
-                    startIcon={<DeleteIcon />}
-                    onClick={handleBulkDeleteClick}
-                  >
-                    Excluir {selectedProducts.length} {selectedProducts.length === 1 ? 'produto' : 'produtos'}
-                  </Button>
+                  <Box sx={{ display: 'flex', gap: 1 }}>
+                    <Button
+                      variant="outlined"
+                      color="success"
+                      size="small"
+                      onClick={async () => {
+                        try {
+                          setLoading(true);
+                          await bulkUpdateStatus(selectedProducts, true);
+                          await fetchProducts();
+                          setSnackbar({ open: true, message: `${selectedProducts.length} produtos ativados.`, severity: 'success' });
+                          setSelectedProducts([]);
+                        } catch (e) {
+                          setSnackbar({ open: true, message: `Erro ao ativar: ${e.message}`, severity: 'error' });
+                        } finally {
+                          setLoading(false);
+                        }
+                      }}
+                    >
+                      Ativar
+                    </Button>
+                    <Button
+                      variant="outlined"
+                      color="warning"
+                      size="small"
+                      onClick={async () => {
+                        try {
+                          setLoading(true);
+                          await bulkUpdateStatus(selectedProducts, false);
+                          await fetchProducts();
+                          setSnackbar({ open: true, message: `${selectedProducts.length} produtos desativados.`, severity: 'success' });
+                          setSelectedProducts([]);
+                        } catch (e) {
+                          setSnackbar({ open: true, message: `Erro ao desativar: ${e.message}`, severity: 'error' });
+                        } finally {
+                          setLoading(false);
+                        }
+                      }}
+                    >
+                      Desativar
+                    </Button>
+                    <Button
+                      variant="outlined"
+                      color="error"
+                      size="small"
+                      startIcon={<DeleteIcon />}
+                      onClick={handleBulkDeleteClick}
+                    >
+                      Excluir {selectedProducts.length} {selectedProducts.length === 1 ? 'produto' : 'produtos'}
+                    </Button>
+                  </Box>
                 )}
               </Box>
 
@@ -976,14 +1019,14 @@ const Products = () => {
 
               {/* Paginação */}
               <TablePagination
-                rowsPerPageOptions={[5, 10, 25, 50]}
+                rowsPerPageOptions={[10, 20, 50]}
                 component="div"
                 count={filteredProducts.length}
                 rowsPerPage={rowsPerPage}
                 page={page}
                 onPageChange={handleChangePage}
                 onRowsPerPageChange={handleChangeRowsPerPage}
-                labelRowsPerPage="Itens por página:"
+                labelRowsPerPage="Produtos por página:"
                 labelDisplayedRows={({ from, to, count }) => `${from}-${to} de ${count}`}
               />
             </>
@@ -1077,15 +1120,35 @@ const Products = () => {
         </DialogActions>
       </Dialog>
 
-      {/* Snackbar para feedback */}
-      <Alert
-        open={snackbar.open}
-        onClose={() => setSnackbar({ ...snackbar, open: false })}
-        severity={snackbar.severity}
-        sx={{ position: 'fixed', bottom: 20, right: 20 }}
-      >
-        {snackbar.message}
-      </Alert>
+      {/* Snackbar para feedback - apenas quando há mensagem */}
+      {snackbar.open && snackbar.message && (
+        <Alert
+          open={snackbar.open}
+          onClose={() => setSnackbar({ open: false, message: '', severity: 'success' })}
+          severity={snackbar.severity}
+          sx={{ 
+            position: 'fixed', 
+            bottom: 20, 
+            left: '50%',
+            transform: 'translateX(-50%)',
+            maxWidth: '400px',
+            zIndex: 9999,
+            minWidth: '300px'
+          }}
+          action={
+            <IconButton
+              size="small"
+              aria-label="close"
+              color="inherit"
+              onClick={() => setSnackbar({ open: false, message: '', severity: 'success' })}
+            >
+              <CloseIcon fontSize="small" />
+            </IconButton>
+          }
+        >
+          {snackbar.message}
+        </Alert>
+      )}
 
       {/* Diálogo de Adição de Produto */}
       <Dialog

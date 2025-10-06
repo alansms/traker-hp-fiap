@@ -18,24 +18,51 @@ logger = logging.getLogger(__name__)
 # Configurações do Elasticsearch
 ES_INDEX = "hp-traker-ml"
 
+# Variável global para controlar tentativas de conexão
+MAX_CONNECTION_ATTEMPTS = 1  # Reduzido para apenas 1 tentativa
+connection_attempts = 0
+should_attempt_connection = True
+
 class ElasticsearchService:
     """Classe para interagir com o Elasticsearch."""
 
     def __init__(self, disable_connection=False):
         """Inicializa o serviço Elasticsearch."""
+        global connection_attempts, should_attempt_connection
+
         self.client = None
         self.available = False
 
-        if not disable_connection:
-            try:
-                self.client = self.get_elasticsearch_client()
-                if self.client:
-                    self.available = True
-                    self.setup_index()
-            except Exception as e:
-                logger.error(f"Erro ao inicializar o Elasticsearch: {e}")
-                logger.warning("Continuando sem conexão ao Elasticsearch. Funcionalidades de busca podem não funcionar.")
-                self.available = False
+        # Se já tentamos conectar muitas vezes ou a conexão está explicitamente desabilitada, não tente novamente
+        if disable_connection or not should_attempt_connection:
+            logger.info("Conexão com Elasticsearch desabilitada. Continuando sem funcionalidades de busca avançada.")
+            return
+
+        # Incrementa o contador de tentativas
+        connection_attempts += 1
+
+        # Se excedeu o número máximo de tentativas, não tente mais
+        if connection_attempts > MAX_CONNECTION_ATTEMPTS:
+            should_attempt_connection = False
+            logger.warning(f"Número máximo de tentativas de conexão ({MAX_CONNECTION_ATTEMPTS}) excedido. Desabilitando conexões futuras.")
+            return
+
+        try:
+            self.client = self.get_elasticsearch_client()
+            if self.client:
+                self.available = True
+                self.setup_index()
+                # Resetar contador de tentativas em caso de sucesso
+                connection_attempts = 0
+        except Exception as e:
+            logger.error(f"Erro ao inicializar o Elasticsearch: {e}")
+            logger.warning("Continuando sem conexão ao Elasticsearch. Funcionalidades de busca podem não funcionar.")
+            self.available = False
+
+            # Se tivermos muitas falhas consecutivas, desabilite tentativas futuras
+            if connection_attempts >= MAX_CONNECTION_ATTEMPTS:
+                should_attempt_connection = False
+                logger.warning("Desabilitando tentativas futuras de conexão com Elasticsearch devido a falhas consecutivas.")
 
     def get_elasticsearch_client(self):
         """Obtém um cliente Elasticsearch configurado com base nas variáveis de ambiente"""
@@ -49,39 +76,51 @@ class ElasticsearchService:
         try:
             # Tenta conectar ao Elasticsearch local
             logger.info(f"Tentando conectar ao Elasticsearch local: {es_local_url}")
-            client = Elasticsearch(
+            
+            # Importa Elasticsearch versão 8
+            from elasticsearch import Elasticsearch as ES8
+            
+            client = ES8(
                 hosts=[es_local_url],
-                request_timeout=10,
-                max_retries=2,
+                request_timeout=30,
+                max_retries=3,
                 retry_on_timeout=True,
                 verify_certs=False,
-                ssl_show_warn=False
+                # Configuração para compatibilidade com ES 8.x
+                http_compress=True,
+                headers={"accept": "application/json", "content-type": "application/json"}
             )
+            
             # Verifica a conexão
-            client.info()
-            logger.info("Conectado ao Elasticsearch local com sucesso!")
+            info = client.info()
+            logger.info(f"✅ Conectado ao Elasticsearch {info['version']['number']} com sucesso!")
             return client
         except Exception as e:
             logger.warning(f"Falha ao conectar ao Elasticsearch local: {e}")
 
             # Tenta conectar ao Elasticsearch na nuvem
-            logger.info(f"Tentando conectar ao Elasticsearch na nuvem: {es_cloud_url}")
+            # Use uma URL alternativa ou a mesma com configuração adequada
+            logger.info("Tentando conectar com configuração alternativa ao Elasticsearch...")
             try:
+                # Usando apenas o Elasticsearch local com configuração alternativa
+                # já que o endpoint na nuvem retornou 410 (resource deleted)
                 client = Elasticsearch(
-                    hosts=[es_cloud_url],
-                    api_key=es_api_key,
+                    hosts=[es_local_url],
                     request_timeout=10,
                     max_retries=2,
                     retry_on_timeout=True,
                     verify_certs=False,
-                    ssl_show_warn=False
+                    ssl_show_warn=False,
+                    # Configuração compatível com a versão do Elasticsearch local
+                    compatibility_mode=True,
+                    headers={"Accept": "application/vnd.elasticsearch+json; compatible-with=8"}
                 )
                 # Tenta obter informações para verificar se está conectado
                 client.info()
-                logger.info("Conectado ao Elasticsearch na nuvem com sucesso!")
+                logger.info("Conectado ao Elasticsearch com configuração alternativa com sucesso!")
                 return client
             except Exception as cloud_e:
-                logger.error(f"Falha ao conectar ao Elasticsearch na nuvem: {cloud_e}")
+                logger.error(f"Falha ao conectar ao Elasticsearch com configuração alternativa: {cloud_e}")
                 logger.error("Continuando sem Elasticsearch. Algumas funcionalidades estarão limitadas.")
                 return None
 
