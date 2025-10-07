@@ -70,88 +70,83 @@ mercado-livre-tracker/
 - Chave de API da OpenAI (para o assistente IA)
 - Servidor SMTP para envio de emails (opcional)
 
-## Guia de Instalação
+## 🚀 Instalação Rápida
 
-### 1. Clonar o Repositório
-
-```bash
-# Execute no terminal
-git clone https://github.com/seu-usuario/mercado-livre-tracker.git
-cd mercado-livre-tracker
-```
-
-### 2. Configurar Variáveis de Ambiente
-
-Crie um arquivo `.env` na raiz do projeto:
+### Método 1: Instalação Automática (Recomendado)
 
 ```bash
-# Execute no terminal
-touch .env
+# 1. Clone o repositório
+git clone https://github.com/alansms/traker-hp-fiap.git
+cd traker-hp-fiap
+
+# 2. Execute o script de instalação
+chmod +x install.sh
+./install.sh
 ```
 
-Edite o arquivo `.env` com as seguintes variáveis:
+O script de instalação irá:
+- ✅ Verificar pré-requisitos (Docker, Git, etc.)
+- ✅ Instalar dependências necessárias
+- ✅ Clonar o repositório
+- ✅ Configurar variáveis de ambiente
+- ✅ Construir e iniciar containers
+- ✅ Configurar banco de dados
+- ✅ Criar usuário administrador padrão
 
-```
-# Segurança
-SECRET_KEY=sua_chave_secreta_aqui
-ALGORITHM=HS256
-ACCESS_TOKEN_EXPIRE_MINUTES=30
-REFRESH_TOKEN_EXPIRE_DAYS=7
+### Método 2: Instalação Manual
 
-# Banco de Dados
-POSTGRES_USER=postgres
-POSTGRES_PASSWORD=postgres
-POSTGRES_DB=ml_tracker
-DATABASE_URL=postgresql://postgres:postgres@db:5432/ml_tracker
-
-# Redis
-REDIS_URL=redis://redis:6379/0
-
-# OpenAI
-OPENAI_API_KEY=your-openai-api-key-here
-
-# Email
-SMTP_SERVER=seu_servidor_smtp
-SMTP_PORT=587
-SMTP_USER=seu_usuario_smtp
-SMTP_PASSWORD=sua_senha_smtp
-
-# Frontend
-FRONTEND_URL=http://localhost:3000
-```
-
-### 3. Construir e Iniciar os Contêineres
+#### 1. Verificar Pré-requisitos
 
 ```bash
-# Execute no terminal
+# Execute o script de verificação
+chmod +x check_requirements.sh
+./check_requirements.sh
+```
+
+#### 2. Clonar o Repositório
+
+```bash
+git clone https://github.com/alansms/traker-hp-fiap.git
+cd traker-hp-fiap
+```
+
+#### 3. Configurar Variáveis de Ambiente
+
+```bash
+# Copie o arquivo de exemplo
+cp env.example .env
+
+# Edite as configurações conforme necessário
+nano .env
+```
+
+#### 4. Construir e Iniciar os Contêineres
+
+```bash
 docker-compose build
 docker-compose up -d
 ```
 
-Este comando irá:
-1. Construir as imagens Docker para backend e frontend
-2. Iniciar os serviços PostgreSQL, Redis, backend, frontend e Nginx
-3. Configurar a rede entre os contêineres
-
-### 4. Verificar os Serviços em Execução
+#### 5. Configurar Sistema
 
 ```bash
-# Execute no terminal
-docker-compose ps
+# Execute o script de configuração pós-instalação
+chmod +x setup.sh
+./setup.sh
 ```
 
-Você deverá ver todos os serviços no estado "Up":
-- ml-tracker-backend
-- ml-tracker-frontend
-- ml-tracker-db
-- ml-tracker-redis
-- ml-tracker-nginx
-
-### 5. Acessar a Aplicação
+### 6. Acessar a Aplicação
 
 - **Frontend**: http://localhost:3000
 - **API Backend**: http://localhost:8000
 - **Documentação da API**: http://localhost:8000/docs
+
+### Credenciais Padrão
+
+- **Email**: admin@example.com
+- **Senha**: admin123
+
+> ⚠️ **IMPORTANTE**: Altere essas credenciais após o primeiro login!
 
 ## Executando Serviços Individualmente
 
@@ -229,45 +224,68 @@ docker-compose restart redis
 
 Verifique se a chave da API está configurada corretamente no arquivo `.env`.
 
+## 🛠️ Scripts de Instalação
+
+### Scripts Disponíveis
+
+| Script | Descrição |
+|--------|-----------|
+| `install.sh` | Instalação completa e automática |
+| `check_requirements.sh` | Verifica pré-requisitos do sistema |
+| `setup.sh` | Configuração pós-instalação |
+| `backup.sh` | Backup automático do banco de dados |
+
+### Uso dos Scripts
+
+```bash
+# Instalação completa
+./install.sh
+
+# Verificar pré-requisitos
+./check_requirements.sh
+
+# Configuração pós-instalação
+./setup.sh
+
+# Backup manual
+./backup.sh
+```
+
 ## Comandos Docker Úteis
 
 ### Iniciar todos os serviços
 
 ```bash
-# Execute no terminal
 docker-compose up -d
 ```
 
 ### Parar todos os serviços
 
 ```bash
-# Execute no terminal
 docker-compose down
 ```
 
 ### Reiniciar um serviço específico
 
 ```bash
-# Execute no terminal
-docker-compose restart [serviço]  # Ex: docker-compose restart backend
+docker-compose restart [serviço]
 ```
 
-### Ver logs de todos os serviços
+### Ver logs
 
 ```bash
-# Execute no terminal
+# Todos os serviços
 docker-compose logs -f
 
-# Ou para um serviço específico
-docker-compose logs -f backend  # Para logs do backend
-docker-compose logs -f frontend  # Para logs do frontend
+# Serviço específico
+docker-compose logs -f backend
+docker-compose logs -f frontend
 ```
 
-### Reconstruir serviços após alterações
+### Reconstruir serviços
 
 ```bash
-# Execute no terminal
-docker-compose build [serviço]  # Ex: docker-compose build backend
+docker-compose build [serviço]
 docker-compose up -d
 ```
 
