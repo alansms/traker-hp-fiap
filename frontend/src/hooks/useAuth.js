@@ -31,7 +31,7 @@ export const AuthProvider = ({ children }) => {
   const register = async (name, email, password) => {
     try {
       setLoading(true);
-      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:8000'}/api/auth/register`, {
+      const response = await fetch(`${process.env.REACT_APP_API_URL || ''}/api/auth/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

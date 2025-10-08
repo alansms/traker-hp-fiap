@@ -49,7 +49,7 @@ import {
 } from '@mui/icons-material';
 import AlertSettingsModal from '../../components/Alerts/AlertSettingsModal';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+const API_URL = process.env.REACT_APP_API_URL || '';
 
 const Alerts = () => {
   const [loading, setLoading] = useState(true);
@@ -97,67 +97,6 @@ const Alerts = () => {
         
         // Sempre usar dados mockados por enquanto
         console.log('🔄 Usando dados mockados para alertas');
-        
-        // Estatísticas mockadas
-        setCriticalAlerts(2);
-        setHighRiskAlerts(0);
-        setPossibleCounterfeit(2);
-        setUnreadAlerts(2);
-        
-        // Dados mockados dos alertas
-        const mockAlerts = [
-          {
-            id: 1,
-            type: 'fake_product',
-            product: {
-              id: 1,
-              name: 'Cartucho HP 664XL Preto',
-              pn: 'F6V29AB',
-              referencePrice: 69.9
-            },
-            currentPrice: 45.9,
-            percentChange: -34.3,
-            seller: 'Vendedor Suspeito',
-            sellerRating: 2.1,
-            riskLevel: 'CRÍTICO',
-            createdAt: new Date(Date.now() - 273 * 24 * 60 * 60 * 1000).toISOString(),
-            read: false,
-            description: 'Preço 34% abaixo do valor de referência - POSSÍVEL FALSIFICAÇÃO',
-            isVerified: false,
-            isFalsePositive: false,
-            productUrl: 'https://www.mercadolivre.com.br/cartucho-hp-664xl-preto',
-            imageUrl: 'https://http2.mlstatic.com/cartucho-hp-664xl.jpg'
-          },
-          {
-            id: 2,
-            type: 'fake_product',
-            product: {
-              id: 2,
-              name: 'Cartucho HP 667 Colorido',
-              pn: '3YM79AB',
-              referencePrice: 69.9
-            },
-            currentPrice: 42.9,
-            percentChange: -38.6,
-            seller: 'Vendedor Desconhecido',
-            sellerRating: 1.8,
-            riskLevel: 'CRÍTICO',
-            createdAt: new Date(Date.now() - 273 * 24 * 60 * 60 * 1000).toISOString(),
-            read: false,
-            description: 'Preço 39% abaixo do valor de referência - POSSÍVEL FALSIFICAÇÃO',
-            isVerified: false,
-            isFalsePositive: false,
-            productUrl: 'https://www.mercadolivre.com.br/cartucho-hp-667-colorido',
-            imageUrl: 'https://http2.mlstatic.com/cartucho-hp-667.jpg'
-          }
-        ];
-        setAlerts(mockAlerts);
-        setFilteredAlerts(mockAlerts);
-        
-      } catch (error) {
-        console.error('Erro ao carregar alertas:', error);
-        setAlerts([]);
-        setFilteredAlerts([]);
       } finally {
         setLoading(false);
       }

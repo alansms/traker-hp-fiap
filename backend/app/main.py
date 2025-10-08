@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 from app.db.session import engine, Base, SessionLocal
 from app.db.init_db import init_db
-from app.routers import auth, chat, openai, scraping, users, settings as settings_router, logs, logs_simple, logs_test, logs_basic, dashboard, products, analytics, data_analysis_ai, products_import, dashboard_postgres, suspicious_config, intelligent_scraping, data_cleanup, scraping_control, alerts, alerts_simple, alerts_basic, alerts_test, alerts_debug, email_test, email_simple
+from app.routers import auth, chat, openai, scraping, users, settings as settings_router, logs, logs_simple, logs_test, logs_basic, dashboard, products, analytics, data_analysis_ai, products_import, dashboard_postgres, suspicious_config, intelligent_scraping, data_cleanup, scraping_control, alerts, alerts_simple, alerts_basic, alerts_test, alerts_debug, email_test, email_simple, system
 from app.middlewares.logging import LoggingMiddleware
 from app.middlewares.debug import log_request_details  # Importando o middleware de depuração
 
@@ -32,6 +32,8 @@ origins = [
     "http://localhost:3001",  # Origem do frontend que está causando o erro
     "http://127.0.0.1",
     "http://127.0.0.1:3000",
+    "http://72.60.247.203",
+    "http://72.60.247.203:3001",
     "http://127.0.0.1:3001",
 ]
 
@@ -60,6 +62,7 @@ app.include_router(openai.router, prefix="/api/openai", tags=["OpenAI"])
 app.include_router(scraping.router, prefix="/api/scraping", tags=["Scraping"])
 app.include_router(users.router, prefix="/api/users", tags=["Usuários"])
 app.include_router(settings_router.router, prefix="/api/settings", tags=["Configurações"])
+app.include_router(system.router, prefix="/api/system", tags=["Sistema"])
 app.include_router(logs.router, prefix="/api/logs", tags=["Logs do Sistema"])
 app.include_router(logs_simple.router, prefix="/api/logs-simple", tags=["Logs Simples"])
 app.include_router(logs_test.router, prefix="/api/logs-test", tags=["Logs Teste"])

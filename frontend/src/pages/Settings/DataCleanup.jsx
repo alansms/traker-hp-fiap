@@ -33,6 +33,7 @@ import {
   ClearAll as ClearAllIcon
 } from '@mui/icons-material';
 import { useAuth } from '../../hooks/useAuth';
+import settingsService from '../../services/settingsService';
 
 const DataCleanup = () => {
   const { user } = useAuth();
@@ -43,6 +44,7 @@ const DataCleanup = () => {
   const [stats, setStats] = useState(null);
   const [confirmDialog, setConfirmDialog] = useState(null);
   const [operation, setOperation] = useState(null);
+  const [dbStats, setDbStats] = useState(null);
 
   // Verificar se o usuário tem permissões
   const isAuthorized = user && user.role === 'admin';
@@ -65,6 +67,10 @@ const DataCleanup = () => {
         const data = await response.json();
         setStats(data.data);
       }
+      
+      // Carregar estatísticas detalhadas do banco
+      const dbData = await settingsService.getDatabaseStats();
+      setDbStats(dbData);
     } catch (error) {
       console.error('Erro ao carregar estatísticas:', error);
     }
@@ -269,6 +275,112 @@ const DataCleanup = () => {
         </Card>
       )}
 
+
+      {/* Estatísticas Detalhadas do Banco de Dados */}
+      {dbStats && (
+        <Card sx={{ mb: 3, border: 2, borderColor: "primary.main" }}>
+          <CardHeader
+            avatar={<InfoIcon color="info" />}
+            title="Dados Armazenados no Banco (Todas as Tabelas)"
+            subheader="Visão completa de onde os dados estão armazenados"
+          />
+          <CardContent>
+            <Grid container spacing={3}>
+              {/* Produtos */}
+              <Grid item xs={12} sm={6} md={4}>
+                <Paper elevation={2} sx={{ p: 2, textAlign: "center", bgcolor: "primary.light", color: "white" }}>
+                  <Typography variant="h3" fontWeight="bold">
+                    {dbStats.products.total}
+                  </Typography>
+                  <Typography variant="body1" fontWeight="medium">
+                    Produtos
+                  </Typography>
+                  <Typography variant="caption" sx={{ mt: 1, display: "block" }}>
+                    {dbStats.products.description}
+                  </Typography>
+                  <Chip label={`${dbStats.products.active} ativos`} size="small" sx={{ mt: 1, bgcolor: "success.main", color: "white" }} />
+                </Paper>
+              </Grid>
+
+              {/* Produtos Suspeitos */}
+              <Grid item xs={12} sm={6} md={4}>
+                <Paper elevation={2} sx={{ p: 2, textAlign: "center", bgcolor: dbStats.suspicious_products.total > 0 ? "warning.light" : "grey.300" }}>
+                  <Typography variant="h3" fontWeight="bold">
+                    {dbStats.suspicious_products.total}
+                  </Typography>
+                  <Typography variant="body1" fontWeight="medium">
+                    Produtos Suspeitos
+                  </Typography>
+                  <Typography variant="caption" sx={{ mt: 1, display: "block" }}>
+                    {dbStats.suspicious_products.description}
+                  </Typography>
+                </Paper>
+              </Grid>
+
+              {/* System Logs */}
+              <Grid item xs={12} sm={6} md={4}>
+                <Paper elevation={2} sx={{ p: 2, textAlign: "center", bgcolor: "info.light", color: "white" }}>
+                  <Typography variant="h3" fontWeight="bold">
+                    {dbStats.system_logs.total}
+                  </Typography>
+                  <Typography variant="body1" fontWeight="medium">
+                    System Logs
+                  </Typography>
+                  <Typography variant="caption" sx={{ mt: 1, display: "block" }}>
+                    {dbStats.system_logs.description}
+                  </Typography>
+                </Paper>
+              </Grid>
+
+              {/* Usuários */}
+              <Grid item xs={12} sm={6} md={4}>
+                <Paper elevation={2} sx={{ p: 2, textAlign: "center", bgcolor: "secondary.light", color: "white" }}>
+                  <Typography variant="h3" fontWeight="bold">
+                    {dbStats.users.total}
+                  </Typography>
+                  <Typography variant="body1" fontWeight="medium">
+                    Usuários
+                  </Typography>
+                  <Typography variant="caption" sx={{ mt: 1, display: "block" }}>
+                    {dbStats.users.description}
+                  </Typography>
+                  <Chip label={`${dbStats.products.active} ativos`} size="small" sx={{ mt: 1, bgcolor: "success.main", color: "white" }} />
+                </Paper>
+              </Grid>
+
+              {/* Vendedores Confiáveis */}
+              <Grid item xs={12} sm={6} md={4}>
+                <Paper elevation={2} sx={{ p: 2, textAlign: "center", bgcolor: "grey.300" }}>
+                  <Typography variant="h3" fontWeight="bold">
+                    {dbStats.trusted_sellers.total}
+                  </Typography>
+                  <Typography variant="body1" fontWeight="medium">
+                    Vendedores Confiáveis
+                  </Typography>
+                  <Typography variant="caption" sx={{ mt: 1, display: "block" }}>
+                    {dbStats.trusted_sellers.description}
+                  </Typography>
+                </Paper>
+              </Grid>
+
+              {/* Configurações */}
+              <Grid item xs={12} sm={6} md={4}>
+                <Paper elevation={2} sx={{ p: 2, textAlign: "center", bgcolor: "grey.300" }}>
+                  <Typography variant="h3" fontWeight="bold">
+                    {dbStats.system_settings.total + dbStats.suspicious_thresholds.total}
+                  </Typography>
+                  <Typography variant="body1" fontWeight="medium">
+                    Configurações
+                  </Typography>
+                  <Typography variant="caption" sx={{ mt: 1, display: "block" }}>
+                    Settings + Thresholds
+                  </Typography>
+                </Paper>
+              </Grid>
+            </Grid>
+          </CardContent>
+        </Card>
+      )}
       {/* Operações de Limpeza */}
       <Grid container spacing={3}>
         {/* Limpeza de Dados de Scraping */}

@@ -85,7 +85,7 @@ const SuspiciousConfig = () => {
   const loadData = async () => {
     setLoading(true);
     try {
-      const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+      const API_URL = process.env.REACT_APP_API_URL || '';
       const [thresholdsRes, sellersRes] = await Promise.all([
         fetch(`${API_URL}/api/suspicious/thresholds`, {
           headers: {
@@ -117,7 +117,7 @@ const SuspiciousConfig = () => {
 
   const handleSaveThreshold = async () => {
     try {
-      const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+      const API_URL = process.env.REACT_APP_API_URL || '';
       const url = editingThreshold 
         ? `${API_URL}/api/suspicious/thresholds/${editingThreshold.id}`
         : `${API_URL}/api/suspicious/thresholds`;
@@ -155,7 +155,7 @@ const SuspiciousConfig = () => {
 
   const handleSaveSeller = async () => {
     try {
-      const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+      const API_URL = process.env.REACT_APP_API_URL || '';
       const url = editingSeller 
         ? `${API_URL}/api/suspicious/trusted-sellers/${editingSeller.id}`
         : `${API_URL}/api/suspicious/trusted-sellers`;
@@ -226,7 +226,7 @@ const SuspiciousConfig = () => {
   const handleDeleteThreshold = async (id) => {
     if (window.confirm('Tem certeza que deseja excluir esta configuração?')) {
       try {
-        const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+        const API_URL = process.env.REACT_APP_API_URL || '';
         const response = await fetch(`${API_URL}/api/suspicious/thresholds/${id}`, {
           method: 'DELETE',
           headers: {
@@ -249,7 +249,7 @@ const SuspiciousConfig = () => {
   const handleDeleteSeller = async (id) => {
     if (window.confirm('Tem certeza que deseja excluir este vendedor?')) {
       try {
-        const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+        const API_URL = process.env.REACT_APP_API_URL || '';
         const response = await fetch(`${API_URL}/api/suspicious/trusted-sellers/${id}`, {
           method: 'DELETE',
           headers: {

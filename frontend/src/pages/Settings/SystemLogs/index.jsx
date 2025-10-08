@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
+import api from "../../../services/api";
 import {
   Box,
   Typography,
@@ -24,13 +25,13 @@ import {
   CircularProgress,
   Card,
   CardContent,
-} from '@mui/material';
+} from "@mui/material";
 import {
   Refresh as RefreshIcon,
   Download as DownloadIcon,
   Search as SearchIcon,
   Clear as ClearIcon
-} from '@mui/icons-material';
+} from "@mui/icons-material";
 
 const SystemLogs = () => {
   const [logs, setLogs] = useState([]);
@@ -38,131 +39,32 @@ const SystemLogs = () => {
   const [error, setError] = useState(null);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(25);
+  const [totalLogs, setTotalLogs] = useState(0);
   const [filters, setFilters] = useState({
-    level: 'all',
-    category: 'all',
-    search: ''
+    level: "all",
+    category: "all",
+    search: ""
   });
-
-  // Dados mockados para demonstração
-  const mockLogs = [
-    {
-      id: 1,
-      timestamp: '2025-01-05T10:30:00Z',
-      level: 'ERROR',
-      category: 'AUTH',
-      message: 'Falha na autenticação do usuário alan@smstecnologia.com.br',
-      user_id: 1,
-      ip_address: '192.168.1.100',
-      user_agent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-    },
-    {
-      id: 2,
-      timestamp: '2025-01-05T10:25:00Z',
-      level: 'INFO',
-      category: 'PRODUCT',
-      message: 'Produto "Cartucho HP 664XL" cadastrado com sucesso',
-      user_id: 1,
-      ip_address: '192.168.1.100',
-      user_agent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-    },
-    {
-      id: 3,
-      timestamp: '2025-01-05T10:20:00Z',
-      level: 'WARNING',
-      category: 'SCRAPING',
-      message: 'Timeout na busca de produtos no Mercado Livre',
-      user_id: null,
-      ip_address: '192.168.1.100',
-      user_agent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-    },
-    {
-      id: 4,
-      timestamp: '2025-01-05T10:15:00Z',
-      level: 'INFO',
-      category: 'USER',
-      message: 'Usuário aprovado: maria@empresa.com',
-      user_id: 1,
-      ip_address: '192.168.1.100',
-      user_agent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-    },
-    {
-      id: 5,
-      timestamp: '2025-01-05T10:10:00Z',
-      level: 'ERROR',
-      category: 'API',
-      message: 'Falha na conexão com Elasticsearch',
-      user_id: null,
-      ip_address: '192.168.1.100',
-      user_agent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-    }
-  ];
 
   const fetchLogs = async () => {
     setLoading(true);
     setError(null);
     try {
-      // Simular carregamento com dados mockados atualizados
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Dados mockados atualizados com os valores corretos do enum
-      const updatedMockLogs = [
-        {
-          id: 1,
-          timestamp: '2025-01-05T10:30:00Z',
-          level: 'HIGH',
-          category: 'SECURITY',
-          action: 'login_attempt',
-          description: 'Tentativa de login falhada para usuário admin@hp.com',
-          user_id: 1,
-          ip_address: '192.168.1.100'
-        },
-        {
-          id: 2,
-          timestamp: '2025-01-05T10:25:00Z',
-          level: 'MEDIUM',
-          category: 'PRODUCT',
-          action: 'product_created',
-          description: 'Produto "Cartucho HP 664XL" cadastrado com sucesso',
-          user_id: 1,
-          ip_address: '192.168.1.100'
-        },
-        {
-          id: 3,
-          timestamp: '2025-01-05T10:20:00Z',
-          level: 'HIGH',
-          category: 'SYSTEM',
-          action: 'scraping_error',
-          description: 'Erro no scraping: Timeout na conexão com Mercado Livre',
-          user_id: null,
-          ip_address: '192.168.1.100'
-        },
-        {
-          id: 4,
-          timestamp: '2025-01-05T10:15:00Z',
-          level: 'LOW',
-          category: 'USER',
-          action: 'user_approved',
-          description: 'Usuário maria@empresa.com aprovado pelo administrador',
-          user_id: 1,
-          ip_address: '192.168.1.100'
-        },
-        {
-          id: 5,
-          timestamp: '2025-01-05T10:10:00Z',
-          level: 'HIGH',
-          category: 'SYSTEM',
-          action: 'database_error',
-          description: 'Erro na conexão com o banco de dados PostgreSQL',
-          user_id: null,
-          ip_address: '192.168.1.100'
-        }
-      ];
-      
-      setLogs(updatedMockLogs);
+      const params = new URLSearchParams();
+      params.append("skip", page * rowsPerPage);
+      params.append("limit", rowsPerPage);
+      if (filters.level && filters.level !== "all") params.append("level", filters.level);
+      if (filters.category && filters.category !== "all") params.append("category", filters.category);
+      if (filters.search) params.append("search_term", filters.search);
+
+      const response = await api.get(`/api/logs/?${params.toString()}`);
+      setLogs(response.data.items || []);
+      setTotalLogs(response.data.total || 0);
     } catch (error) {
-      console.error('Erro ao carregar logs:', error);
-      setError('Erro ao carregar logs do sistema');
+      console.error("Erro ao carregar logs:", error);
+      setError("Erro ao carregar logs do sistema. Verifique sua conexão.");
+      setLogs([]);
+      setTotalLogs(0);
     } finally {
       setLoading(false);
     }
@@ -170,8 +72,7 @@ const SystemLogs = () => {
 
   useEffect(() => {
     fetchLogs();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filters]);
+  }, [page, rowsPerPage, filters.level, filters.category]);
 
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
@@ -192,269 +93,148 @@ const SystemLogs = () => {
 
   const handleClearFilters = () => {
     setFilters({
-      level: 'all',
-      category: 'all',
-      search: ''
+      level: "all",
+      category: "all",
+      search: ""
     });
     setPage(0);
   };
 
-  const handleExportCSV = () => {
-    try {
-      // Criar CSV dos logs filtrados
-      const csvHeaders = ['ID', 'Timestamp', 'Level', 'Category', 'Action', 'Description', 'User ID', 'IP Address'];
-      const csvRows = [csvHeaders.join(',')];
-      
-      filteredLogs.forEach(log => {
-        const row = [
-          log.id,
-          log.timestamp,
-          log.level,
-          log.category,
-          log.action || '',
-          `"${(log.description || '').replace(/"/g, '""')}"`, // Escapar aspas
-          log.user_id || '',
-          log.ip_address || ''
-        ];
-        csvRows.push(row.join(','));
-      });
-      
-      const csvContent = csvRows.join('\n');
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-      const link = document.createElement('a');
-      const url = URL.createObjectURL(blob);
-      link.setAttribute('href', url);
-      link.setAttribute('download', `logs_export_${new Date().toISOString().split('T')[0]}.csv`);
-      link.style.visibility = 'hidden';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    } catch (error) {
-      console.error('Erro ao exportar logs:', error);
-      setError('Erro ao exportar logs em CSV');
-    }
-  };
-
   const getLevelColor = (level) => {
-    switch (level) {
-      case 'HIGH':
-        return 'error';
-      case 'MEDIUM':
-        return 'warning';
-      case 'LOW':
-        return 'info';
-      case 'CRITICAL':
-        return 'error';
+    switch (level?.toUpperCase()) {
+      case "HIGH":
+      case "ERROR":
+        return "error";
+      case "MEDIUM":
+      case "WARNING":
+        return "warning";
+      case "LOW":
+      case "INFO":
+        return "info";
       default:
-        return 'default';
+        return "default";
     }
   };
 
   const getCategoryColor = (category) => {
-    switch (category) {
-      case 'SECURITY':
-        return 'primary';
-      case 'PRODUCT':
-        return 'success';
-      case 'USER':
-        return 'secondary';
-      case 'SYSTEM':
-        return 'warning';
-      case 'SEARCH':
-        return 'info';
-      case 'OTHER':
-        return 'default';
+    switch (category?.toUpperCase()) {
+      case "SECURITY":
+      case "AUTH":
+        return "error";
+      case "PRODUCT":
+        return "primary";
+      case "SYSTEM":
+      case "API":
+        return "secondary";
+      case "USER":
+        return "info";
+      case "SCRAPING":
+        return "warning";
       default:
-        return 'default';
+        return "default";
     }
   };
 
   const formatTimestamp = (timestamp) => {
-    return new Date(timestamp).toLocaleString('pt-BR');
+    if (!timestamp) return "N/A";
+    try {
+      return new Date(timestamp).toLocaleString("pt-BR", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit"
+      });
+    } catch (e) {
+      return timestamp;
+    }
   };
 
-  const filteredLogs = logs.filter(log => {
-    const matchesLevel = filters.level === 'all' || log.level === filters.level;
-    const matchesCategory = filters.category === 'all' || log.category === filters.category;
-    const matchesSearch = !filters.search || 
-      (log.description && log.description.toLowerCase().includes(filters.search.toLowerCase())) ||
-      (log.action && log.action.toLowerCase().includes(filters.search.toLowerCase())) ||
-      (log.ip_address && log.ip_address.includes(filters.search));
-    
-    return matchesLevel && matchesCategory && matchesSearch;
-  });
-
-  const paginatedLogs = filteredLogs.slice(
-    page * rowsPerPage,
-    page * rowsPerPage + rowsPerPage
-  );
-
   return (
-    <Box sx={{ p: 3 }}>
-      <Typography variant="h4" component="h1" gutterBottom sx={{ fontWeight: 'bold', mb: 3 }}>
-        Logs do Sistema
-      </Typography>
+    <Box>
+      <Card sx={{ mb: 3 }}>
+        <CardContent>
+          <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
+            <Typography variant="h5" component="h2">
+              Logs do Sistema
+            </Typography>
+            <Box sx={{ display: "flex", gap: 1 }}>
+              <Tooltip title="Atualizar">
+                <IconButton onClick={fetchLogs} disabled={loading}>
+                  <RefreshIcon />
+                </IconButton>
+              </Tooltip>
+            </Box>
+          </Box>
 
-      {/* Banner informativo */}
-      <Paper
-        elevation={3}
-        sx={{
-          p: 3,
-          mb: 4,
-          bgcolor: 'info.light',
-          color: 'info.contrastText',
-          borderLeft: '6px solid',
-          borderColor: 'info.main',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 1
-        }}
-      >
-        <Typography variant="h5" fontWeight="bold">
-          Logs do Sistema
-        </Typography>
-        <Typography variant="body1">
-          Monitore todas as atividades do sistema, erros, avisos e informações importantes.
-          Use os filtros para encontrar logs específicos.
-        </Typography>
-      </Paper>
+          <Grid container spacing={2} sx={{ mb: 2 }}>
+            <Grid item xs={12} sm={4}>
+              <FormControl fullWidth size="small">
+                <InputLabel>Nível</InputLabel>
+                <Select
+                  value={filters.level}
+                  label="Nível"
+                  onChange={(e) => handleFilterChange("level", e.target.value)}
+                >
+                  <MenuItem value="all">Todos</MenuItem>
+                  <MenuItem value="HIGH">Alto</MenuItem>
+                  <MenuItem value="MEDIUM">Médio</MenuItem>
+                  <MenuItem value="LOW">Baixo</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
 
-      {/* Filtros */}
-      <Paper sx={{ p: 3, mb: 3 }}>
-        <Typography variant="h6" gutterBottom>
-          Filtros
-        </Typography>
-        <Grid container spacing={2} alignItems="center">
-          <Grid item xs={12} sm={3}>
-            <FormControl fullWidth size="small">
-              <InputLabel>Nível</InputLabel>
-              <Select
-                value={filters.level}
-                label="Nível"
-                onChange={(e) => handleFilterChange('level', e.target.value)}
+            <Grid item xs={12} sm={4}>
+              <FormControl fullWidth size="small">
+                <InputLabel>Categoria</InputLabel>
+                <Select
+                  value={filters.category}
+                  label="Categoria"
+                  onChange={(e) => handleFilterChange("category", e.target.value)}
+                >
+                  <MenuItem value="all">Todas</MenuItem>
+                  <MenuItem value="SECURITY">Segurança</MenuItem>
+                  <MenuItem value="PRODUCT">Produto</MenuItem>
+                  <MenuItem value="SYSTEM">Sistema</MenuItem>
+                  <MenuItem value="USER">Usuário</MenuItem>
+                  <MenuItem value="SCRAPING">Scraping</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+
+            <Grid item xs={12} sm={4}>
+              <TextField
+                fullWidth
+                size="small"
+                label="Buscar"
+                value={filters.search}
+                onChange={(e) => handleFilterChange("search", e.target.value)}
+                InputProps={{
+                  startAdornment: <SearchIcon sx={{ mr: 1, color: "action.active" }} />,
+                  endAdornment: filters.search && (
+                    <IconButton size="small" onClick={() => handleFilterChange("search", "")}>
+                      <ClearIcon fontSize="small" />
+                    </IconButton>
+                  )
+                }}
+              />
+            </Grid>
+          </Grid>
+
+          {(filters.level !== "all" || filters.category !== "all" || filters.search) && (
+            <Box sx={{ mb: 2 }}>
+              <Button
+                size="small"
+                startIcon={<ClearIcon />}
+                onClick={handleClearFilters}
               >
-                <MenuItem value="all">Todos</MenuItem>
-                <MenuItem value="CRITICAL">Crítico</MenuItem>
-                <MenuItem value="HIGH">Alto</MenuItem>
-                <MenuItem value="MEDIUM">Médio</MenuItem>
-                <MenuItem value="LOW">Baixo</MenuItem>
-              </Select>
-            </FormControl>
-          </Grid>
-          <Grid item xs={12} sm={3}>
-            <FormControl fullWidth size="small">
-              <InputLabel>Categoria</InputLabel>
-              <Select
-                value={filters.category}
-                label="Categoria"
-                onChange={(e) => handleFilterChange('category', e.target.value)}
-              >
-                <MenuItem value="all">Todas</MenuItem>
-                <MenuItem value="SECURITY">Segurança</MenuItem>
-                <MenuItem value="PRODUCT">Produtos</MenuItem>
-                <MenuItem value="USER">Usuários</MenuItem>
-                <MenuItem value="SYSTEM">Sistema</MenuItem>
-                <MenuItem value="SEARCH">Busca</MenuItem>
-                <MenuItem value="OTHER">Outros</MenuItem>
-              </Select>
-            </FormControl>
-          </Grid>
-          <Grid item xs={12} sm={4}>
-            <TextField
-              fullWidth
-              size="small"
-              label="Buscar"
-              placeholder="Digite para buscar..."
-              value={filters.search}
-              onChange={(e) => handleFilterChange('search', e.target.value)}
-              InputProps={{
-                startAdornment: <SearchIcon sx={{ mr: 1, color: 'text.secondary' }} />
-              }}
-            />
-          </Grid>
-          <Grid item xs={12} sm={2}>
-            <Button
-              fullWidth
-              variant="outlined"
-              startIcon={<ClearIcon />}
-              onClick={handleClearFilters}
-            >
-              Limpar
-            </Button>
-          </Grid>
-        </Grid>
-      </Paper>
-
-      {/* Estatísticas */}
-      <Grid container spacing={2} sx={{ mb: 3 }}>
-        <Grid item xs={12} sm={3}>
-          <Card>
-            <CardContent>
-              <Typography color="textSecondary" gutterBottom>
-                Total de Logs
-              </Typography>
-              <Typography variant="h4">
-                {filteredLogs.length}
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-        <Grid item xs={12} sm={3}>
-          <Card>
-            <CardContent>
-              <Typography color="textSecondary" gutterBottom>
-                Erros
-              </Typography>
-              <Typography variant="h4" color="error">
-                {filteredLogs.filter(log => log.level === 'HIGH' || log.level === 'CRITICAL').length}
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-        <Grid item xs={12} sm={3}>
-          <Card>
-            <CardContent>
-              <Typography color="textSecondary" gutterBottom>
-                Avisos
-              </Typography>
-              <Typography variant="h4" color="warning.main">
-                {filteredLogs.filter(log => log.level === 'MEDIUM').length}
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-        <Grid item xs={12} sm={3}>
-          <Card>
-            <CardContent>
-              <Typography color="textSecondary" gutterBottom>
-                Informações
-              </Typography>
-              <Typography variant="h4" color="info.main">
-                {filteredLogs.filter(log => log.level === 'LOW').length}
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
-
-      {/* Ações */}
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-        <Typography variant="h6">
-          Logs ({filteredLogs.length} registros)
-        </Typography>
-        <Box>
-          <Tooltip title="Atualizar">
-            <IconButton onClick={fetchLogs} disabled={loading}>
-              <RefreshIcon />
-            </IconButton>
-          </Tooltip>
-          <Tooltip title="Exportar CSV">
-            <IconButton onClick={handleExportCSV}>
-              <DownloadIcon />
-            </IconButton>
-          </Tooltip>
-        </Box>
-      </Box>
+                Limpar Filtros
+              </Button>
+            </Box>
+          )}
+        </CardContent>
+      </Card>
 
       {error && (
         <Alert severity="error" sx={{ mb: 2 }}>
@@ -463,9 +243,13 @@ const SystemLogs = () => {
       )}
 
       {loading ? (
-        <Box display="flex" justifyContent="center" alignItems="center" py={4}>
+        <Box sx={{ display: "flex", justifyContent: "center", p: 4 }}>
           <CircularProgress />
         </Box>
+      ) : logs.length === 0 ? (
+        <Alert severity="info">
+          Nenhum log encontrado. {filters.level !== "all" || filters.category !== "all" || filters.search ? "Tente ajustar os filtros." : ""}
+        </Alert>
       ) : (
         <Paper>
           <TableContainer>
@@ -481,41 +265,41 @@ const SystemLogs = () => {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {paginatedLogs.map((log) => (
+                {logs.map((log) => (
                   <TableRow key={log.id} hover>
                     <TableCell>
-                      <Typography variant="body2">
+                      <Typography variant="body2" noWrap>
                         {formatTimestamp(log.timestamp)}
                       </Typography>
                     </TableCell>
                     <TableCell>
                       <Chip
-                        label={log.level}
+                        label={log.level || "N/A"}
                         color={getLevelColor(log.level)}
                         size="small"
                       />
                     </TableCell>
                     <TableCell>
                       <Chip
-                        label={log.category}
+                        label={log.category || "N/A"}
                         color={getCategoryColor(log.category)}
                         size="small"
                         variant="outlined"
                       />
                     </TableCell>
                     <TableCell>
-                      <Typography variant="body2" sx={{ maxWidth: 300 }}>
-                        {log.description || log.action}
-                      </Typography>
-                    </TableCell>
-                    <TableCell>
                       <Typography variant="body2">
-                        {log.user_id ? `ID: ${log.user_id}` : 'Sistema'}
+                        {log.description || log.message || "N/A"}
                       </Typography>
                     </TableCell>
                     <TableCell>
-                      <Typography variant="body2" color="text.secondary">
-                        {log.ip_address}
+                      <Typography variant="body2" noWrap>
+                        {log.user_id ? `ID: ${log.user_id}` : "Sistema"}
+                      </Typography>
+                    </TableCell>
+                    <TableCell>
+                      <Typography variant="body2" noWrap>
+                        {log.ip_address || "N/A"}
                       </Typography>
                     </TableCell>
                   </TableRow>
@@ -526,12 +310,13 @@ const SystemLogs = () => {
           <TablePagination
             rowsPerPageOptions={[10, 25, 50, 100]}
             component="div"
-            count={filteredLogs.length}
+            count={totalLogs}
             rowsPerPage={rowsPerPage}
             page={page}
             onPageChange={handleChangePage}
             onRowsPerPageChange={handleChangeRowsPerPage}
-            labelRowsPerPage="Logs por página:"
+            labelRowsPerPage="Registros por página:"
+            labelDisplayedRows={({ from, to, count }) => `${from}-${to} de ${count !== -1 ? count : `mais de ${to}`}`}
           />
         </Paper>
       )}

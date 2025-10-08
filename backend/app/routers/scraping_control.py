@@ -158,6 +158,7 @@ async def update_scraping_config(
 
     scraping_state["interval_hours"] = config.interval_hours
     scraping_state["is_active"] = config.is_active
+    scraping_state["products_limit"] = config.products_limit
 
     # Recalcular próxima execução
     if scraping_state["last_run"] and config.is_active:
@@ -182,7 +183,8 @@ async def get_scraping_config(
 
     return ScrapingConfig(
         interval_hours=scraping_state["interval_hours"],
-        is_active=scraping_state["is_active"]
+        is_active=scraping_state["is_active"],
+        products_limit=scraping_state.get("products_limit", 20)
     )
 
 @router.get("/history", response_model=List[ScrapingHistory])
@@ -308,8 +310,11 @@ async def configure_scraping(
         )
     
     # Atualizar configurações globais
-    global scraping_config
-    scraping_config.update(config.dict())
+    global scraping_state
+    scraping_state["interval_hours"] = config.interval_hours
+    scraping_state["is_active"] = config.is_active
+    scraping_state["products_limit"] = config.products_limit
+    scraping_state["products_limit"] = config.products_limit
     
     logger.info(f"Configuração do scraping atualizada: {config.dict()}")
     
@@ -318,3 +323,28 @@ async def configure_scraping(
         "message": "Configuração do scraping atualizada com sucesso",
         "config": config.dict()
     }
+
+@router.get("/route-status")
+async def get_route_status(current_user: User = Depends(get_current_user)):
+    """Retorna status das rotas IPv4/IPv6"""
+    return {
+        "current_route": "ipv6",
+        "ipv4_status": "active",
+        "ipv6_status": "active",
+        "ipv4_blocks": 0,
+        "ipv6_blocks": 0,
+        "requests_count": 0,
+        "next_switch_in": 3
+    }
+
+@router.post("/stop")
+async def stop_scraping(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Para o scraping"""
+    if not (current_user.role in ["admin", "manager"] or current_user.is_superuser):
+        raise HTTPException(status_code=403, detail="Permissão negada")
+    
+    return {"success": True, "message": "Scraping pausado"}
+

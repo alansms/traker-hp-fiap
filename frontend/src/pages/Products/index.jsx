@@ -556,7 +556,7 @@ const Products = () => {
       }));
 
       // Enviar para a API
-      const response = await fetch('http://localhost:8000/api/products/import', {
+      const response = await fetch('/api/products/import', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

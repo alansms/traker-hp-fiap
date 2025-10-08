@@ -74,6 +74,19 @@ const settingsService = {
         message: error.response?.data?.detail || 'Erro ao validar a chave da API'
       };
     }
+  },
+
+  /**
+   * Obtém estatísticas detalhadas do banco de dados
+   */
+  getDatabaseStats: async () => {
+    try {
+      const response = await api.get("/api/system/database-stats");
+      return response;
+    } catch (error) {
+      console.error("Erro ao buscar estatísticas do banco:", error);
+      throw error;
+    }
   }
 };
 

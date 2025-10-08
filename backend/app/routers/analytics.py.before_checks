@@ -38,8 +38,6 @@ async def get_price_distribution(
     Retorna a distribuição de produtos por faixas de preço
     """
     try:
-        if db.query(SuspiciousProduct).count() == 0:
-            return {"success": True, "data": [], "message": "Sem dados"}
         # Buscar produtos com preços do PostgreSQL
         products = db.query(Product).filter(
             Product.is_active == True,
@@ -91,8 +89,6 @@ async def get_price_evolution(
     Retorna a evolução de preço de produtos ao longo do tempo
     """
     try:
-        if db.query(SuspiciousProduct).count() == 0:
-            return {"success": True, "data": [], "message": "Sem dados"}
         # Buscar produtos com dados de scraping
         products = db.query(Product).filter(
             Product.is_active == True,
@@ -140,8 +136,6 @@ async def get_search_trends(
     Retorna os termos de busca mais frequentes
     """
     try:
-        if db.query(SuspiciousProduct).count() == 0:
-            return {"success": True, "data": [], "message": "Sem dados"}
         # Verificar se há dados de scraping
         if not check_scraping_data_available(db):
             return {
@@ -198,8 +192,6 @@ async def get_top_products(
     Retorna os produtos mais encontrados nas buscas
     """
     try:
-        if db.query(SuspiciousProduct).count() == 0:
-            return {"success": True, "data": [], "message": "Sem dados"}
         # Buscar produtos ativos do PostgreSQL
         products = db.query(Product).filter(
             Product.is_active == True
@@ -236,8 +228,6 @@ async def get_daily_searches(
     Retorna a contagem de buscas por dia
     """
     try:
-        if db.query(SuspiciousProduct).count() == 0:
-            return {"success": True, "data": [], "message": "Sem dados"}
         # Verificar se há dados de scraping
         if not check_scraping_data_available(db):
             return {
@@ -297,8 +287,6 @@ async def get_top_rated_products(
     Retorna os produtos com melhores avaliações baseado em dados reais
     """
     try:
-        if db.query(SuspiciousProduct).count() == 0:
-            return {"success": True, "data": [], "message": "Sem dados"}
         # Buscar produtos com dados de scraping
         products = db.query(Product).filter(
             Product.is_active == True,
@@ -337,8 +325,6 @@ async def get_category_distribution(
     Retorna a distribuição de produtos por categoria
     """
     try:
-        if db.query(SuspiciousProduct).count() == 0:
-            return {"success": True, "data": [], "message": "Sem dados"}
         # Buscar produtos ativos do PostgreSQL
         products = db.query(Product).filter(
             Product.is_active == True
@@ -377,8 +363,6 @@ async def get_stock_availability(
     Retorna a disponibilidade de estoque dos produtos inferida pelos dados
     """
     try:
-        if db.query(SuspiciousProduct).count() == 0:
-            return {"success": True, "data": [], "message": "Sem dados"}
         # Calcula a data de início do período
         start_date = (datetime.now() - timedelta(days=period_days)).isoformat()
 
@@ -452,8 +436,6 @@ async def get_seller_performance(
     Retorna o desempenho dos principais vendedores baseado em dados reais
     """
     try:
-        if db.query(SuspiciousProduct).count() == 0:
-            return {"success": True, "data": [], "message": "Sem dados"}
         # Buscar dados reais de vendedores dos produtos suspeitos
         from ..models.suspicious_product import SuspiciousProduct
         from sqlalchemy import func
@@ -499,8 +481,6 @@ async def get_price_rating_relationship(
     Retorna a relação entre preço e avaliação dos produtos
     """
     try:
-        if db.query(SuspiciousProduct).count() == 0:
-            return {"success": True, "data": [], "message": "Sem dados"}
         # Buscar produtos com dados de scraping
         products = db.query(Product).filter(
             Product.is_active == True,
@@ -538,8 +518,6 @@ async def get_cartridge_model_distribution(
     Retorna a distribuição por modelo de cartucho
     """
     try:
-        if db.query(SuspiciousProduct).count() == 0:
-            return {"success": True, "data": [], "message": "Sem dados"}
         # Buscar produtos agrupados por família
         from sqlalchemy import func
         
@@ -580,8 +558,6 @@ async def get_original_vs_compatible(
     Retorna a proporção de produtos originais vs compatíveis
     """
     try:
-        if db.query(SuspiciousProduct).count() == 0:
-            return {"success": True, "data": [], "message": "Sem dados"}
         # Buscar produtos e classificar como original ou compatível
         products = db.query(Product).filter(
             Product.is_active == True
@@ -620,8 +596,6 @@ async def get_average_price_by_model(
     Retorna o preço médio por modelo
     """
     try:
-        if db.query(SuspiciousProduct).count() == 0:
-            return {"success": True, "data": [], "message": "Sem dados"}
         from sqlalchemy import func
         
         model_prices = db.query(
@@ -660,8 +634,6 @@ async def get_overview_data(
     Retorna dados de overview baseados em dados reais do scraping
     """
     try:
-        if db.query(SuspiciousProduct).count() == 0:
-            return {"success": True, "data": [], "message": "Sem dados"}
         from ..models.suspicious_product import SuspiciousProduct
         from sqlalchemy import func
         

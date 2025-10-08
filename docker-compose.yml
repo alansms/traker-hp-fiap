@@ -25,7 +25,7 @@ services:
       - SMTP_PORT=465
       - SMTP_USER=tracker_hp@smstecnologia.com.br
       - SMTP_PASSWORD=@#Pi231179
-      - FRONTEND_URL=http://localhost:3001
+      - FRONTEND_URL=http://72.60.247.203:3001
       - ELASTICSEARCH_URL=http://elasticsearch:9200
       - ELASTICSEARCH_API_KEY=TGFmSlhKY0ItRGtNRXVmY1YxeDg6bThDUFBwdHlwNkgzTDk4eHJFNHBWUQ==
       - ELASTICSEARCH_CLOUD_URL=https://cce7c968e5f94cb59b5922e251810730.us-central1.gcp.cloud.es.io:443
@@ -49,7 +49,8 @@ services:
       - /app/node_modules
     environment:
       - HOST=0.0.0.0
-      - WDS_SOCKET_PORT=0
+      - WDS_SOCKET_PORT=3001
+      - WDS_SOCKET_HOST=72.60.247.203
       - PORT=80
       - CHOKIDAR_USEPOLLING=true
       - WATCHPACK_POLLING=true

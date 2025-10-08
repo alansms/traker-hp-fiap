@@ -1,6 +1,6 @@
 import api from './api';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+const API_URL = process.env.REACT_APP_API_URL || '';
 
 const scrapingControlService = {
   /**
@@ -60,7 +60,7 @@ const scrapingControlService = {
    */
   updateConfig: async (config) => {
     try {
-      const response = await api.post('/api/scraping-control/configure', config);
+      const response = await api.put('/api/scraping-control/config', config);
       return response;
     } catch (error) {
       console.error('Erro ao atualizar configuração do scraping:', error);

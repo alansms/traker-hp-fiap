@@ -1,20 +1,6 @@
 // Determina dinamicamente a URL base para API
 const determineApiUrl = () => {
-  // Se a variável de ambiente está definida, use-a
-  if (process.env.REACT_APP_API_URL) {
-    return process.env.REACT_APP_API_URL;
-  }
-
-  // Detecta o host atual para usar como base da API
-  const currentHost = window.location.hostname;
-
-  // Se estamos acessando por IP ou domínio específico, use o mesmo para a API
-  if (currentHost !== 'localhost' && currentHost !== '127.0.0.1') {
-    return `http://${currentHost}:8000`; // Adicionando porta 8000 explicitamente
-  }
-
-  // Use localhost:8000 como fallback (em vez do IP específico)
-  return 'http://localhost:8000';
+  return "";
 };
 
 const API_URL = determineApiUrl();

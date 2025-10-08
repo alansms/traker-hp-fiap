@@ -150,7 +150,7 @@ const NotificationSettings = () => {
 
       if (type === 'email') {
         // Usar endpoint de teste de email
-        const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:8000'}/api/email/test-email`, {
+        const response = await fetch(`${process.env.REACT_APP_API_URL || ''}/api/email/test-email`, {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${token}`,

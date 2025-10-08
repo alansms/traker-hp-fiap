@@ -17,6 +17,7 @@ from ..models.trusted_seller import TrustedSeller
 from ..models.suspicious_threshold import SuspiciousThreshold
 from ..models.suspicious_product import SuspiciousProduct
 from ..scrapers.enhanced_ml_scraper import search_ml_product
+from ..scrapers.ipv6_adapter import force_ipv6
 
 logger = logging.getLogger(__name__)
 
@@ -207,6 +208,9 @@ class IntelligentScraper:
         return suspicious_products
     
     async def run_intelligent_scraping(self) -> Dict[str, Any]:
+        # Forçar uso de IPv6
+        force_ipv6()
+
         """Executa o scraping inteligente"""
         logger.info("Iniciando scraping inteligente...")
         

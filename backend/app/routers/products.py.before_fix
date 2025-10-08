@@ -7,7 +7,6 @@ from app.core.security import get_current_user
 from app.db.session import get_db
 from app.models.user import User
 from app.models.product import Product
-from app.models.suspicious_product import SuspiciousProduct
 from app.models.system_log import SystemLog, LogLevel, LogCategory
 from app.schemas.product import ProductCreate, ProductSearch
 from app.scrapers.mercado_livre import search_products_ml
@@ -577,27 +576,23 @@ async def get_recent_products_public(
     Endpoint público para obter os produtos mais recentemente atualizados.
     Este endpoint não requer autenticação e é usado na página de análise de dados.
     """
-    # Verificar se há dados reais em suspicious_products
-    if db.query(SuspiciousProduct).count() == 0:
-        return []
-
-    # Retornar produtos de suspicious_products (dados reais do scraping)
-    recent_suspicious = db.query(SuspiciousProduct)\
-        .order_by(SuspiciousProduct.detected_at.desc())\
+    products = db.query(Product)\
+        .filter(Product.is_active == True)\
+        .order_by(Product.last_search.desc().nullslast())\
         .limit(limit)\
         .all()
 
     return [
         {
-            "id": p.id,
-            "name": p.title,
-            "pn": "",
-            "search_terms": p.title,
-            "reference_price": float(p.price) if p.price else 0.0,
-            "last_search": p.detected_at.isoformat() if p.detected_at else None,
-            "is_active": True,
-            "family": "",
-            "seller": p.seller_name or "Mercado Livre"
+            "id": product.id,
+            "name": product.name,
+            "pn": product.pn,
+            "search_terms": product.search_terms,
+            "reference_price": product.reference_price,
+            "last_search": product.last_search.isoformat() if product.last_search else None,
+            "is_active": product.is_active,
+            "family": product.family,
+            "seller": "Mercado Livre"  # Valor padrão para o vendedor
         }
-        for p in recent_suspicious
+        for product in products
     ]

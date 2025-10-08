@@ -57,7 +57,7 @@ export const useAuth = () => {
 
             console.log('Enviando para o backend:', requestData);
 
-            const response = await fetch('http://localhost:8000/api/auth/register', {
+            const response = await fetch('/api/auth/register', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -83,7 +83,7 @@ export const useAuth = () => {
     const login = async (email, password) => {
         setLoading(true);
         try {
-            const response = await fetch('http://localhost:8000/api/auth/login', {
+            const response = await fetch('/api/auth/login', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -117,7 +117,7 @@ export const useAuth = () => {
     const verify2FA = async (email, code) => {
         setLoading(true);
         try {
-            const response = await fetch('http://localhost:8000/api/auth/verify-2fa', {
+            const response = await fetch('/api/auth/verify-2fa', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -156,7 +156,7 @@ export const useAuth = () => {
     const requestPasswordReset = async (email) => {
         setLoading(true);
         try {
-            const response = await fetch('http://localhost:8000/api/auth/request-password-reset', {
+            const response = await fetch('/api/auth/request-password-reset', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -182,7 +182,7 @@ export const useAuth = () => {
     const verifyResetCode = async (email, code) => {
         setLoading(true);
         try {
-            const response = await fetch('http://localhost:8000/api/auth/verify-reset-code', {
+            const response = await fetch('/api/auth/verify-reset-code', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -208,7 +208,7 @@ export const useAuth = () => {
     const resetPassword = async (email, code, newPassword) => {
         setLoading(true);
         try {
-            const response = await fetch('http://localhost:8000/api/auth/reset-password', {
+            const response = await fetch('/api/auth/reset-password', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

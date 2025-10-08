@@ -94,7 +94,7 @@ const Sidebar = () => {
       text: 'Vendedores',
       icon: <PeopleAlt />,
       path: '/sellers',
-      badge: user && (user.role === 'admin' || user.is_superuser || user.is_admin) ? 'Novo' : null
+      badge: null
     },
     { text: 'Configurações', icon: <Settings />, path: '/settings' },
   ];

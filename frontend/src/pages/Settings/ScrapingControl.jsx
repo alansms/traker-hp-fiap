@@ -21,7 +21,9 @@ import {
   ListItemIcon,
   IconButton,
   Tooltip,
-  LinearProgress
+  LinearProgress,
+  Switch,
+  FormControlLabel
 } from '@mui/material';
 import {
   PlayArrow as PlayIcon,
@@ -32,7 +34,8 @@ import {
   Settings as SettingsIcon,
   CheckCircle as CheckIcon,
   Error as ErrorIcon,
-  Warning as WarningIcon
+  Warning as WarningIcon,
+  NetworkCheck as NetworkCheckIcon
 } from '@mui/icons-material';
 import scrapingControlService from '../../services/scrapingControlService';
 
@@ -48,6 +51,8 @@ const ScrapingControl = () => {
   const [loading, setLoading] = useState(false);
   const pollerRef = useRef(null);
   const [progress, setProgress] = useState(0);
+  const [routeStatus, setRouteStatus] = useState(null);
+  const [scrapingEnabled, setScrapingEnabled] = useState(true);
 
   // Carregar dados iniciais
   useEffect(() => {
@@ -78,6 +83,9 @@ const ScrapingControl = () => {
         }
         if (configData && typeof configData.products_limit === 'number') {
           setProductsLimit(configData.products_limit);
+        if (configData && typeof configData.is_active !== "undefined") {
+          setScrapingEnabled(configData.is_active);
+        }
         }
       } catch (e) {
         console.error('Erro ao obter configuração do scraping:', e);
@@ -240,6 +248,21 @@ const ScrapingControl = () => {
     }
   };
 
+
+  const handleToggleScrapingEnabled = async (enabled) => {
+    try {
+      setLoading(true);
+      await scrapingControlService.updateConfig({ is_active: enabled });
+      setScrapingEnabled(enabled);
+      setMessage(enabled ? "Scraping automático ativado!" : "Scraping automático desativado!");
+      await loadInitialData();
+    } catch (error) {
+      console.error("Erro ao atualizar configuração:", error);
+      setMessage("Erro ao atualizar configuração");
+    } finally {
+      setLoading(false);
+    }
+  };
   // Cleanup do polling ao desmontar
   useEffect(() => {
     return () => {
@@ -325,6 +348,15 @@ const ScrapingControl = () => {
             />
             <CardContent>
               <Grid container spacing={3}>
+
+                {/* Alerta quando scraping está desativado */}
+                {!scrapingEnabled && (
+                  <Grid item xs={12}>
+                    <Alert severity="warning" sx={{ mb: 2 }}>
+                      <strong>Scraping Automático Desativado!</strong> Para iniciar o scraping, ative o switch "Scraping Automático" acima.
+                    </Alert>
+                  </Grid>
+                )}
                 {/* Botões de Controle */}
                 <Grid item xs={12}>
                   <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
@@ -333,7 +365,7 @@ const ScrapingControl = () => {
                       color="primary"
                       startIcon={isRunning ? <CircularProgress size={20} /> : <PlayIcon />}
                       onClick={handleStartScraping}
-                      disabled={isRunning || loading}
+                      disabled={isRunning || loading || !scrapingEnabled}
                       size="large"
                     >
                       {isRunning ? 'Executando...' : 'Iniciar Scraping'}
@@ -352,6 +384,33 @@ const ScrapingControl = () => {
                   </Box>
                 </Grid>
 
+
+                {/* Toggle Scraping Automático */}
+                <Grid item xs={12}>
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 2, p: 2, bgcolor: "background.default", borderRadius: 2 }}>
+                    <FormControlLabel
+                      control={
+                        <Switch
+                          checked={scrapingEnabled}
+                          onChange={(e) => handleToggleScrapingEnabled(e.target.checked)}
+                          color="primary"
+                        />
+                      }
+                      label={
+                        <Box>
+                          <Typography variant="body1" fontWeight="medium">
+                            {scrapingEnabled ? "Scraping Automático Ativo" : "Scraping Automático Desativado"}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            {scrapingEnabled 
+                              ? "O scraping será executado automaticamente no intervalo configurado" 
+                              : "O scraping automático está pausado. Apenas execuções manuais serão permitidas."}
+                          </Typography>
+                        </Box>
+                      }
+                    />
+                  </Box>
+                </Grid>
                 {/* Configuração de Intervalo */}
                 <Grid item xs={12} sm={6}>
                   <FormControl fullWidth>
@@ -444,7 +503,86 @@ const ScrapingControl = () => {
           </Card>
         </Grid>
 
-        {/* Histórico de Execuções */}
+        
+        {/* Status de Rotas IPv4/IPv6 */}
+        <Grid item xs={12} md={4}>
+          <Card>
+            <CardHeader 
+              title="Status de Rotas"
+              subheader="Monitoramento IPv4/IPv6"
+              avatar={<NetworkCheckIcon color="primary" />}
+            />
+            <CardContent>
+              {routeStatus ? (
+                <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                  {/* Rota Atual */}
+                  <Box>
+                    <Typography variant="body2" color="text.secondary" gutterBottom>
+                      <strong>Rota Atual:</strong>
+                    </Typography>
+                    <Chip 
+                      label={routeStatus.current_route?.toUpperCase() || "IPv6"}
+                      color="primary"
+                      sx={{ fontWeight: "bold" }}
+                    />
+                  </Box>
+
+                  {/* Status IPv4 */}
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                    <Typography variant="body2" sx={{ minWidth: 80 }}>
+                      <strong>IPv4:</strong>
+                    </Typography>
+                    {routeStatus.ipv4_status === "blocked" ? (
+                      <>
+                        <Chip label="BLOQUEADO" color="error" size="small" />
+                        <Typography variant="caption" color="error">
+                          ({routeStatus.ipv4_blocks || 0} bloqueios)
+                        </Typography>
+                      </>
+                    ) : (
+                      <Chip label="ATIVO" color="success" size="small" />
+                    )}
+                  </Box>
+
+                  {/* Status IPv6 */}
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                    <Typography variant="body2" sx={{ minWidth: 80 }}>
+                      <strong>IPv6:</strong>
+                    </Typography>
+                    {routeStatus.ipv6_status === "blocked" ? (
+                      <>
+                        <Chip label="BLOQUEADO" color="error" size="small" />
+                        <Typography variant="caption" color="error">
+                          ({routeStatus.ipv6_blocks || 0} bloqueios)
+                        </Typography>
+                      </>
+                    ) : (
+                      <Chip label="ATIVO" color="success" size="small" />
+                    )}
+                  </Box>
+
+                  <Divider />
+
+                  {/* Próxima Troca */}
+                  <Box>
+                    <Typography variant="body2" color="text.secondary">
+                      <strong>Próxima troca em:</strong> {routeStatus.next_switch_in || 3} requisições
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      ({routeStatus.requests_count || 0} requisições na rota atual)
+                    </Typography>
+                  </Box>
+                </Box>
+              ) : (
+                <Typography variant="body2" color="text.secondary">
+                  Carregando status das rotas...
+                </Typography>
+              )}
+            </CardContent>
+          </Card>
+        </Grid>
+
+{/* Histórico de Execuções */}
         <Grid item xs={12} md={4}>
           <Card>
             <CardHeader 

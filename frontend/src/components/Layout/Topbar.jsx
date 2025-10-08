@@ -1,209 +1,148 @@
-import React, { useState, useEffect } from 'react';
-import {
-  AppBar,
-  Toolbar,
-  Box,
-  IconButton,
-  Typography,
-  Menu,
-  MenuItem,
-  Avatar,
-  Tooltip,
-  Divider
-} from '@mui/material';
+import React, { useState, useEffect } from "react";
+import { 
+  AppBar, Toolbar, Typography, IconButton, Badge, 
+  Menu, MenuItem, Avatar, Box, Tooltip,
+  useTheme, useMediaQuery
+} from "@mui/material";
 import {
   Notifications as NotificationsIcon,
+  AccountCircle,
   Settings as SettingsIcon,
-  Logout as LogoutIcon,
-  AccountCircle as AccountCircleIcon,
-  Info as InfoIcon
-} from '@mui/icons-material';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../../hooks/useAuth';
-import { useTheme } from '@mui/material/styles';
-import logoHpBranco from '../../assets/logo_hp_branco.png';
-import AppInfoModal from '../AppInfoModal';
-import NotificationBell from '../Alerts/NotificationBell';
+  ExitToApp as LogoutIcon,
+  Menu as MenuIcon
+} from "@mui/icons-material";
+import { useNavigate, useLocation } from "react-router-dom";
+import { useAuth } from "../../hooks/useAuth";
 
-const Topbar = () => {
-  const { user, logout } = useAuth();
-  const navigate = useNavigate();
+const Topbar = ({ onMenuToggle }) => {
   const theme = useTheme();
-
-  const [anchorElUser, setAnchorElUser] = useState(null);
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { user, logout } = useAuth();
+  
   const [alerts, setAlerts] = useState([]);
+  const [notificationAnchorEl, setNotificationAnchorEl] = useState(null);
 
-  // Carregar alertas para o sino de notificação
+  // Buscar alertas reais da API
   useEffect(() => {
     const fetchAlerts = async () => {
       try {
-        // Usar dados mockados simplificados para o popup
-        const mockAlerts = [
-          {
-            id: 1,
-            type: 'fake_product',
-            product: {
-              name: 'Cartucho HP 664XL Preto'
-            },
-            percentChange: -34.3,
-            seller: 'Vendedor Suspeito',
-            sellerRating: 2.1,
-            riskLevel: 'CRÍTICO',
-            createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), // 2 dias atrás
-            read: false
-          },
-          {
-            id: 2,
-            type: 'fake_product',
-            product: {
-              name: 'Cartucho HP 667 Colorido'
-            },
-            percentChange: -38.6,
-            seller: 'Vendedor Desconhecido',
-            sellerRating: 1.8,
-            riskLevel: 'CRÍTICO',
-            createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(), // 3 dias atrás
-            read: false
-          }
-        ];
-        console.log('🔔 Dados mockados do popup:', mockAlerts);
-        setAlerts(mockAlerts);
+        const response = await fetch("/api/alerts/");
+        if (response.ok) {
+          const data = await response.json();
+          setAlerts(data.alerts || []);
+        } else {
+          setAlerts([]);
+        }
       } catch (error) {
-        console.error('Erro ao carregar alertas:', error);
+        console.error("Erro ao carregar alertas:", error);
+        setAlerts([]);
       }
     };
 
     fetchAlerts();
   }, []);
 
-  const handleOpenUserMenu = (event) => {
-    setAnchorElUser(event.currentTarget);
+  const handleNotificationClick = (event) => {
+    setNotificationAnchorEl(event.currentTarget);
   };
 
-  const handleCloseUserMenu = () => {
-    setAnchorElUser(null);
+  const handleNotificationClose = () => {
+    setNotificationAnchorEl(null);
   };
 
-  const handleLogout = async () => {
-    try {
-      await logout();
-      navigate('/auth/login');
-    } catch (error) {
-      console.error('Erro ao fazer logout:', error);
-    }
+  const handleLogout = () => {
+    logout();
+    navigate("/login");
   };
 
-  const handleSettings = () => {
-    navigate('/settings');
-    handleCloseUserMenu();
-  };
-
-  const handleProfile = () => {
-    // Futuramente, navegar para a página de perfil
-    handleCloseUserMenu();
-  };
-
-  const [infoModalOpen, setInfoModalOpen] = useState(false);
-
-  const handleOpenInfoModal = () => {
-    setInfoModalOpen(true);
-  };
-
-  const handleCloseInfoModal = () => {
-    setInfoModalOpen(false);
+  const getPageTitle = () => {
+    const path = location.pathname;
+    const titles = {
+      "/": "Dashboard",
+      "/dashboard": "Dashboard",
+      "/analysis": "Análise de Dados",
+      "/products": "Produtos",
+      "/alerts": "Alertas",
+      "/settings": "Configurações",
+      "/logs": "Logs do Sistema",
+      "/users": "Usuários"
+    };
+    return titles[path] || "Sistema";
   };
 
   return (
-    <>
-      <AppBar
-        position="fixed"
-        sx={{
-          zIndex: theme.zIndex.drawer + 1,
-          backgroundColor: theme.palette.primary.main,
-          boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)',
-          width: '100%',
-          height: '64px'
-        }}
-        className="MuiBox-root css-1vsours"
-      >
-        <Toolbar sx={{ justifyContent: 'space-between', minHeight: '64px' }}>
-          <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <Box
-              component="img"
-              src={logoHpBranco}
-              alt="HP Logo"
-              sx={{
-                height: '40px', // Aumentado de 30px para 40px
-                width: 'auto',
-                display: { xs: 'none', sm: 'block' },
-                cursor: 'pointer'
-              }}
-              onClick={() => navigate('/')}
-            />
-          </Box>
+    <AppBar position="static" elevation={1}>
+      <Toolbar>
+        {isMobile && (
+          <IconButton
+            color="inherit"
+            aria-label="open drawer"
+            onClick={onMenuToggle}
+            edge="start"
+            sx={{ mr: 2 }}
+          >
+            <MenuIcon />
+          </IconButton>
+        )}
 
-          <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <NotificationBell alerts={alerts} />
+        <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+          {getPageTitle()}
+        </Typography>
 
-            <Tooltip title="Opções da conta">
-              <IconButton onClick={handleOpenUserMenu} sx={{ ml: 1 }}>
-                {user?.avatar_url ? (
-                  <Avatar
-                    alt={user?.full_name || 'User'}
-                    src={user?.avatar_url}
-                    sx={{ width: 32, height: 32 }}
-                  />
-                ) : (
-                  <Avatar sx={{ width: 32, height: 32, bgcolor: theme.palette.secondary.main }}>
-                    {user?.full_name?.charAt(0) || 'U'}
-                  </Avatar>
-                )}
-              </IconButton>
-            </Tooltip>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+          <Tooltip title="Notificações">
+            <IconButton color="inherit" onClick={handleNotificationClick}>
+              <Badge badgeContent={alerts.length} color="error">
+                <NotificationsIcon />
+              </Badge>
+            </IconButton>
+          </Tooltip>
 
-            <Menu
-              sx={{ mt: '45px' }}
-              id="menu-appbar"
-              anchorEl={anchorElUser}
-              anchorOrigin={{
-                vertical: 'top',
-                horizontal: 'right',
-              }}
-              keepMounted
-              transformOrigin={{
-                vertical: 'top',
-                horizontal: 'right',
-              }}
-              open={Boolean(anchorElUser)}
-              onClose={handleCloseUserMenu}
-            >
-              <MenuItem onClick={handleProfile}>
-                <AccountCircleIcon fontSize="small" sx={{ mr: 1 }} />
-                <Typography textAlign="center">Perfil</Typography>
-              </MenuItem>
-              <MenuItem onClick={handleSettings}>
-                <SettingsIcon fontSize="small" sx={{ mr: 1 }} />
-                <Typography textAlign="center">Configurações</Typography>
-              </MenuItem>
-              <MenuItem onClick={() => {
-                handleCloseUserMenu();
-                handleOpenInfoModal();
-              }}>
-                <InfoIcon fontSize="small" sx={{ mr: 1 }} />
-                <Typography textAlign="center">About HP Tracker ML</Typography>
-              </MenuItem>
-              <Divider />
-              <MenuItem onClick={handleLogout}>
-                <LogoutIcon fontSize="small" sx={{ mr: 1 }} />
-                <Typography textAlign="center">Sair</Typography>
-              </MenuItem>
-            </Menu>
-          </Box>
-        </Toolbar>
-      </AppBar>
+          <Tooltip title="Configurações">
+            <IconButton color="inherit" onClick={() => navigate("/settings")}>
+              <SettingsIcon />
+            </IconButton>
+          </Tooltip>
 
-      <AppInfoModal open={infoModalOpen} onClose={handleCloseInfoModal} />
-    </>
+          <Tooltip title={user?.name || user?.email || "Usuário"}>
+            <IconButton color="inherit" onClick={() => {}}>
+              <Avatar sx={{ width: 32, height: 32, bgcolor: "primary.main" }}>
+                {user?.name?.charAt(0) || user?.email?.charAt(0) || "U"}
+              </Avatar>
+            </IconButton>
+          </Tooltip>
+        </Box>
+
+        {/* Menu de Notificações */}
+        <Menu
+          anchorEl={notificationAnchorEl}
+          open={Boolean(notificationAnchorEl)}
+          onClose={handleNotificationClose}
+          PaperProps={{
+            sx: { maxHeight: 300, width: 350 }
+          }}
+        >
+          {alerts.length === 0 ? (
+            <MenuItem disabled>Nenhuma notificação</MenuItem>
+          ) : (
+            alerts.slice(0, 5).map((alert, index) => (
+              <MenuItem key={index} onClick={handleNotificationClose}>
+                <Box>
+                  <Typography variant="body2" fontWeight="bold">
+                    {alert.title || "Alerta"}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    {alert.message || "Nova atividade detectada"}
+                  </Typography>
+                </Box>
+              </MenuItem>
+            ))
+          )}
+        </Menu>
+      </Toolbar>
+    </AppBar>
   );
 };
 

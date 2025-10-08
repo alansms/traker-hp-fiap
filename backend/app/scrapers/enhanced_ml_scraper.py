@@ -9,6 +9,7 @@ import time
 from datetime import datetime
 from urllib.parse import quote_plus, urljoin
 import requests
+from .ipv6_adapter import force_ipv6
 from bs4 import BeautifulSoup
 import os
 
@@ -300,7 +301,7 @@ def search_products_by_dict(products_dict, max_products=None):
         search_term = description
 
         # Adiciona um delay para evitar sobrecarga no servidor
-        time.sleep(1)
+        time.sleep(float(os.getenv("SCRAPE_RATE_LIMIT", "3.0")))
 
         product_data = search_ml_product(search_term)
         if product_data:
@@ -352,7 +353,7 @@ async def run_enhanced_scraper(db):
                 logger.info(f"Buscando produto: {search_terms}")
 
                 # Adiciona um delay entre buscas para evitar bloqueio
-                time.sleep(1)
+                time.sleep(float(os.getenv("SCRAPE_RATE_LIMIT", "3.0")))
 
                 product_data = search_ml_product(search_terms)
 
@@ -400,6 +401,9 @@ async def run_enhanced_scraper(db):
 
 
 def run_scraper(produtos=None, save_to_elasticsearch=True, save_to_csv=True, csv_filename="resultados_ml_enhanced.csv"):
+    # Forçar uso de IPv6
+    force_ipv6()
+
     """Executa o scraper para uma lista de produtos e salva os resultados"""
     if produtos is None:
         produtos = PRODUTOS
@@ -479,6 +483,9 @@ def run_scraper(produtos=None, save_to_elasticsearch=True, save_to_csv=True, csv
 
 
 def main():
+    # Forçar uso de IPv6 para evitar bloqueios
+    force_ipv6()
+
     """Função principal para execução direta do script"""
     if len(sys.argv) > 1:
         # Se houver argumentos, assumir que são termos de busca

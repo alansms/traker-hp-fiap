@@ -120,7 +120,7 @@ const Register = () => {
 
   const handleResendVerification = async () => {
     try {
-      const response = await fetch('http://localhost:8000/api/auth/resend-verification', {
+      const response = await fetch('/api/auth/resend-verification', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

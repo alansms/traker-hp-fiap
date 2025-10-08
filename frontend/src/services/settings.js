@@ -1,5 +1,5 @@
 // Serviço para gerenciar configurações do sistema
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+const API_URL = process.env.REACT_APP_API_URL || '';
 
 // Buscar todas as configurações do sistema
 export const getSystemSettings = async () => {

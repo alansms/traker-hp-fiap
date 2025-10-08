@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from app.core.security import get_current_user
 from app.core.config import settings
+from app.services.openai import get_api_key
 import httpx
 
 router = APIRouter()
@@ -14,7 +15,10 @@ async def validate_openai_key(current_user = Depends(get_current_user)):
     if current_user.role != "admin":
         raise HTTPException(status_code=403, detail="Apenas administradores podem validar a chave da API")
 
-    if not settings.OPENAI_API_KEY:
+    # Buscar chave do banco de dados primeiro
+    api_key = await get_api_key()
+    
+    if not api_key:
         return {"valid": False, "message": "Chave da API não configurada no servidor"}
 
     try:
@@ -23,7 +27,7 @@ async def validate_openai_key(current_user = Depends(get_current_user)):
             response = await client.post(
                 "https://api.openai.com/v1/chat/completions",
                 headers={
-                    "Authorization": f"Bearer {settings.OPENAI_API_KEY}",
+                    "Authorization": f"Bearer {api_key}",
                     "Content-Type": "application/json"
                 },
                 json={

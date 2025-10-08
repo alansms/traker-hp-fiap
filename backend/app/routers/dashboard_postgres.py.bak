@@ -4,7 +4,6 @@ from sqlalchemy.orm import Session
 from sqlalchemy import text, func, desc
 from ..db.session import get_db
 from ..models.product import Product
-from ..models.suspicious_product import SuspiciousProduct
 from ..core.security import get_current_user
 from ..models.user import User
 import logging
@@ -24,11 +23,6 @@ async def get_top_products(
     Retorna os produtos mais encontrados nas buscas usando dados do PostgreSQL
     """
     try:
-        # CORREÇÃO: Verificar se há dados reais em suspicious_products
-        total_suspicious = db.query(SuspiciousProduct).count()
-        if total_suspicious == 0:
-            return {"success": True, "data": [], "message": "Nenhum dado de scraping disponível. Execute o scraping para visualizar dados reais."}
-
         # Buscar produtos ativos (mesmo sem last_search preenchido)
         products = db.query(Product).filter(
             Product.is_active == True
@@ -73,10 +67,6 @@ async def get_search_trends(
     Retorna os termos mais buscados usando dados do PostgreSQL
     """
     try:
-        # CORREÇÃO: Verificar se há dados reais
-        if db.query(SuspiciousProduct).count() == 0:
-            return {"success": True, "data": [], "message": "Nenhum dado de scraping disponível."}
-
         # Buscar produtos por família/categoria
         family_stats = db.query(
             Product.family,
@@ -135,16 +125,12 @@ async def get_daily_searches(
                 "message": "Nenhum produto cadastrado no sistema."
             }
         
-        # CORREÇÃO: Retornar vazio se não há dados reais
-        if db.query(SuspiciousProduct).count() == 0:
-            return {"success": True, "data": [], "message": "Nenhum dado de scraping disponível."}
-
         # Simular dados de busca diária baseados nos produtos
         daily_data = []
         
         for i in range(period_days):
             date = datetime.now() - timedelta(days=i)
-            # AVISO: Dados simulados removidos - retornar vazio quando não há suspicious_products
+            # Simular variação de buscas baseada no dia da semana
             base_searches = total_products * 2
             if date.weekday() < 5:  # Dias úteis
                 searches = base_searches + (i % 3) * 5
@@ -180,7 +166,6 @@ async def get_price_distribution(
     Retorna distribuição de preços dos produtos
     """
     try:
-        if db.query(SuspiciousProduct).count() == 0: return {"success": True, "data": [], "message": "Sem dados"}
         # Buscar produtos com preços
         products = db.query(Product).filter(
             Product.is_active == True,
@@ -246,7 +231,6 @@ async def get_top_rated_products(
     Retorna produtos melhor avaliados baseado em dados reais do scraping
     """
     try:
-        if db.query(SuspiciousProduct).count() == 0: return {"success": True, "data": [], "message": "Sem dados"}
         # Buscar produtos suspeitos com dados de scraping para ter avaliações mais realistas
         products = db.query(Product).filter(
             Product.is_active == True,
